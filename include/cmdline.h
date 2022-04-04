@@ -1,6 +1,6 @@
 
-#ifndef __SMR_CMDLINE_H
-#define __SMR_CMDLINE_H
+#ifndef __CMD_CMDLINE_H
+#define __CMD_CMDLINE_H
 
 #include <cmdoption.h>
 #include <map>
@@ -40,4 +40,4 @@ class CmdLine {
 
 } ;
 
-#endif     // __SMR_CMDLINE_H
+#endif     // __CMD_CMDLINE_H

@@ -1,6 +1,6 @@
 
-#ifndef __SMR_CMDOPTION_H
-#define __SMR_CMDOPTION_H
+#ifndef __CMD_CMDOPTION_H
+#define __CMD_CMDOPTION_H
 
 #include <stdexcept>
 #include <string>
@@ -109,4 +109,4 @@ class CmdOption {
 
 #undef _TYPE
 
-#endif     // __SMR_CMDOPTION_H
+#endif     // __CMD_CMDOPTION_H
