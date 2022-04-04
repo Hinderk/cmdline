@@ -23,6 +23,13 @@ IF( UNIX )
   ADD_DEFINITIONS( -std=c++11 -frtti )
 ENDIF( UNIX )
 
+# The following settings are used to build the library with some
+# native C++ compiler on a Windows box (e.g. VS2019):
+
+IF( WIN32 )
+  SET( CMAKE_SHARED_LIBRARY_PREFIX "" )
+ENDIF( WIN32 )
+
 # The following switch turns the automated unit tests on or off. To
 # disable the compilation of test code simply remove the line below.
 
