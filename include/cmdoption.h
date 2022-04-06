@@ -88,7 +88,7 @@ class CmdOption {
 
     OptionType Type( void ) const { return type ; }
 
-    const char *str( void ) const { return value.c_str() ; }
+    const char *str( void ) const ;
 
   private:
 

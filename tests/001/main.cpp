@@ -10,19 +10,25 @@
 int main( int argc, const char *argv[] )
 {
   CmdLine Options( argc, argv ) ;
-  int TypeA = Options.AddOption( OptionType::FLOAT, "-f", "--float" ) ;
-  int TypeB = Options.AddOption( OptionType::UNSIGNED, "-C", "--count" ) ;
-  int TypeC = Options.AddOption( OptionType::INTEGER, "-i", "--index" ) ;
-  int TypeD = Options.AddOption( OptionType::BOOLEAN, "-v", "--verbose" ) ;
-  int TypeE = Options.AddOption( OptionType::STRING, "-N", "--name" ) ;
+  CmdLine::Option Type[] = {
+    Options.AddOption( OptionType::FLOAT, "-f", "--float" ) ,
+    Options.AddOption( OptionType::UNSIGNED, "-C", "--count" ) ,
+    Options.AddOption( OptionType::INTEGER, "-i", "--index" ) ,
+    Options.AddOption( OptionType::BOOLEAN, "-v", "--verbose" ) ,
+    Options.AddOption( OptionType::STRING, "-N", "--name" )
+  } ;
   int state = Options.Parse() ;
 
   if ( state )  return state ;
 
   CmdOption Result ;
 
-  int n = Options.QueryOption( Result, TypeC ) ;
-  n = Options.NextOption( Result, TypeC ) ;
+  int n = Options.QueryOption( Result, Type[2] ) ;
+  while ( n )
+  {
+    std::cout << "Option:  " << (int) Result << std::endl ;
+    n = Options.NextOption( Result, Type[2] ) ;
+  }
 
   CmdOption A( 1.0 ) ;
   CmdOption B( 5u ) ;
@@ -49,7 +55,7 @@ int main( int argc, const char *argv[] )
         std::cout << " Integer: " << (int) s << std::endl ;
         break ;
       case OptionType::FLOAT:
-        std::cout << "   Float: " << (float) s << std::endl ; 
+        std::cout << "   Float: " << (float) s << std::endl ;
         break ;
       case OptionType::BOOLEAN:
         std::cout << " Boolean: " << (bool) s << std::endl ;
@@ -60,7 +66,7 @@ int main( int argc, const char *argv[] )
       default:
         ;
     }
-  } 
+  }
 
   return 0 ;
 }
