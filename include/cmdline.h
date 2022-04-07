@@ -20,13 +20,13 @@ class CmdLine {
 
     struct OptionData {
 
-      bool         Required ;
-      bool         HasDefault ;
-      OptionType   Type ;
-      CmdOption    Default ;
-      std::string  Info ;
-      std::string  Name ;
-      std::string  Unit ;
+      bool         Required = false ;
+      bool         HasDefault = false ;
+      OptionType   Type = OptionType::NONE ;
+      CmdOption    Default = {} ;
+      std::string  Info = "" ;
+      std::string  Name = "" ;
+      std::string  Unit = "" ;
 
     } ;
 

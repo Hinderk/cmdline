@@ -45,16 +45,16 @@ class CmdOption {
       switch ( TypeIndex<T>::value )
       {
         case OptionType::INTEGER:
-          opt.index = val ;
+          opt.index = (int64_t) val ;
           break ;
         case OptionType::FLOAT:
-          opt.fpval = val ;
+          opt.fpval = (double) val ;
           break ;
         case OptionType::BOOLEAN:
           opt.logical = val ;
           break ;
         case OptionType::UNSIGNED:
-          opt.number = val ;
+          opt.number = (uint64_t) val ;
         default: ;
       }
     }
@@ -64,20 +64,20 @@ class CmdOption {
       switch ( TypeIndex<T>::value )
       {
         case OptionType::INTEGER:
-          if ( opt.index <= std::numeric_limits<T>::max() &&
-               std::numeric_limits<T>::lowest() <= opt.index )
+          if ( opt.index <= (int64_t) std::numeric_limits<T>::max() &&
+               (int64_t) std::numeric_limits<T>::lowest() <= opt.index )
             return (T) opt.index ;
           throw std::domain_error( "Option value out of range." ) ;
         case OptionType::FLOAT:
-          if ( opt.fpval <= std::numeric_limits<T>::max() &&
-               std::numeric_limits<T>::lowest() <= opt.fpval )
+          if ( opt.fpval <= (double) std::numeric_limits<T>::max() &&
+               (double) std::numeric_limits<T>::lowest() <= opt.fpval )
             return (T) opt.fpval ;
           throw std::domain_error( "Option value out of range." ) ;
         case OptionType::BOOLEAN:
           return opt.logical ;
         case OptionType::UNSIGNED:
-          if ( opt.number <= std::numeric_limits<T>::max() &&
-               std::numeric_limits<T>::lowest() <= opt.number )
+          if ( opt.number <= (uint64_t) std::numeric_limits<T>::max() &&
+               (uint64_t) std::numeric_limits<T>::lowest() <= opt.number )
             return (T) opt.number ;
           throw std::domain_error( "Option value out of range." ) ;
         default:

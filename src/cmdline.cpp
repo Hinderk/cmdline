@@ -176,7 +176,7 @@ int CmdLine::AddHelp( CmdLine::Option OI, const std::string &Text )
 
 int CmdLine::QueryOption( CmdOption &Result, CmdLine::Option OI )
 {
-  OptionCounter = Arguments.count( OI.Index ) ;
+  OptionCounter = (int) Arguments.count( OI.Index ) ;
   if ( OptionCounter > 0 )
   {
     ActiveOption = OI.Index ;
@@ -207,7 +207,7 @@ int CmdLine::NextOption( CmdOption &Result, CmdLine::Option OI )
   if ( OptionCounter > 1 )
   {
     OptionCounter -- ;
-    int skip = Arguments.count( ActiveOption ) - OptionCounter ;
+    int skip = (int) Arguments.count( ActiveOption ) - OptionCounter ;
     for ( const auto &a : Arguments )
     {
       if ( a.first == ActiveOption && -- skip < 0 )
@@ -234,8 +234,8 @@ std::string CmdLine::Usage( void ) const
   for ( const auto &c : Data )
   {
     string a, o, entry ;
-    int s = sopt.count( c.first ) ;
-    int l = lopt.count( c.first ) ;
+    size_t s = sopt.count( c.first ) ;
+    size_t l = lopt.count( c.first ) ;
     if ( !c.second.Required || c.second.HasDefault )  a = '[' ;
     if ( s > 0 )
     {
