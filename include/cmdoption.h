@@ -3,11 +3,11 @@
 #define __CMD_CMDOPTION_H
 
 #include <cstdint>
-#include <cstddef>
 #include <typeinfo>
 
 
 #define __ID(T,N)  TypeIndex<T> { static constexpr int value = N ; }
+#define __TD(N,T) TypeDefinition< N > { typedef T Type ; }
 
 
 #define     CMD_UNDEFINED_T   0x00
@@ -32,12 +32,10 @@
 
 namespace __CMD {
 
-
   template < typename T > struct TypeIndex
   {
     static constexpr int value = CMD_UNDEFINED_T ;
   } ;
-
 
   template<> struct __ID( int16_t, CMD_INT16_T ) ;
   template<> struct __ID( int32_t, CMD_INT32_T ) ;
@@ -54,65 +52,48 @@ namespace __CMD {
   template<> struct __ID( uint8_t, CMD_UINT8_T ) ;
   template<> struct __ID( const char *, CMD_STRING_T ) ;
 
+  template < int n > struct TypeDefinition { typedef void Type ; } ;
+
+  template<> struct __TD( CMD_INT16_T, int16_t ) ;
+  template<> struct __TD( CMD_INT32_T, int32_t ) ;
+  template<> struct __TD( CMD_INT64_T, int64_t ) ;
+  template<> struct __TD( CMD_FLOAT32_T, float ) ;
+  template<> struct __TD( CMD_FLOAT64_T, double ) ;
+  template<> struct __TD( CMD_FLOAT96_T, long double ) ;
+  template<> struct __TD( CMD_UINT16_T, uint16_t ) ;
+  template<> struct __TD( CMD_UINT32_T, uint32_t ) ;
+  template<> struct __TD( CMD_UINT64_T, uint64_t ) ;
+  template<> struct __TD( CMD_BOOL_T, bool ) ;
+  template<> struct __TD( CMD_CHAR_T, char ) ;
+  template<> struct __TD( CMD_INT8_T, int8_t ) ;
+  template<> struct __TD( CMD_UINT8_T, uint8_t ) ;
+  template<> struct __TD( CMD_STRING_T, const char * ) ;
 
 }  // End of namespace __CMD
 
 
-class OptionValue ;
-
 
 class CmdOption {
 
-    friend class OptionValue ;
+    template < int Index >
+    using DataType = typename __CMD::TypeDefinition< Index >::Type ;
 
   public:
 
+    struct DataHandle {
 
-    CmdOption( void ) : Handle( NULL ) {}
+      virtual ~DataHandle( void ) {} ;
 
-   ~CmdOption( void ) {}
+      virtual int Type( void ) const  = 0 ;
 
+    } ;
 
-//   ~CmdOption( void ) { this -> Discard( Handle ) ; }
+    virtual ~CmdOption( void ) {}
 
-
-//    CmdOption( const char Text[] )
-//    {
-//      DataHandle *Item = new DataItem<const char *>( Text ) ;
-//      Handle = this -> Copy( CMD_STRING_T, Item ) ;
-//      delete Item ; 
-//    } 
-
-
-//    template < typename T > CmdOption( const T &val )
-//    {
-//      DataHandle *Item = new DataItem<T>( val ) ;
-//      Handle = this -> Copy( __CMD::TypeIndex<T>::value, Item ) ; 
-//      delete Item ;
-//    }
-
-
-//    template < typename T > CmdOption& operator=( const T &val )
-//    {
-//      DataHandle *Item = new DataItem<T>( val ) ;
-//      Handle = this -> Copy( __CMD::TypeIndex<T>::value, Item ) ;
-//      delete Item ;
-//      return *this ;
-//    }
-
-
-//    CmdOption& operator=( const CmdOption &CO )
-//    {
-//      if ( this == &CO )  return *this ;
-//      if ( Handle )  delete Handle ; 
-//      Handle = this -> Copy( CO.Type(), CO.Handle ) ;
-//      return *this ;
-//    }
-
-
-//    CmdOption( const CmdOption &CO ) { this -> operator=( CO ) ; }
-
-
+    int Type( void ) const
+    { 
+      return Handle ? Handle -> Type() : CMD_UNDEFINED_T ;
+    } 
 
     template < typename T > operator T( void ) const
     {
@@ -123,22 +104,21 @@ class CmdOption {
       throw std::bad_cast() ;
     }
 
-
-    int Type( void ) const
-    { 
-      return Handle ? Handle -> Type() : CMD_UNDEFINED_T ;
-    } 
-
-
   protected:
 
-    struct DataHandle {
+    CmdOption( void ) : Handle( NULL ) {}
 
-      virtual ~DataHandle( void ) {} ;
+    template < typename T >
+    DataHandle* CopyItem( const DataHandle *In )
+    {
+      return new DataItem<T>(static_cast<const DataItem<T>*>(In)->Item) ;
+    }
 
-      virtual int Type( void ) const  = 0 ;
-
-    } ;
+    template < int Index >
+    DataHandle* CreateCopy( const DataHandle *Input )
+    {
+      return CopyItem< DataType<Index> > ( Input ) ;
+    }
 
     template < typename T >
     struct DataItem : public DataHandle {
@@ -154,17 +134,23 @@ class CmdOption {
 
     } ;
 
-    virtual void Discard( DataHandle * ) {}  // Handle will be NULL ...
+    void Destroy( CmdOption *COP ) { COP -> Discard( Handle ) ; }
 
-    virtual DataHandle* Copy( int, const DataHandle * )
-    { 
-      return NULL ;            // Void base class may be contructed ...
+    DataHandle* Create( int Type, const DataHandle *Data, CmdOption *COP )
+    {
+      return COP -> Copy( Type, Data ) ;
     }
+
+    virtual void Discard( const DataHandle * ) = 0 ;
+    virtual DataHandle* Copy( int, const DataHandle * ) = 0 ;
+
+  protected:
 
     DataHandle *Handle ;
 
 } ;
 
 #undef __ID
+#undef __TD
 
 #endif     // __CMD_CMDOPTION_H
