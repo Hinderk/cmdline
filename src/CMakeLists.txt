@@ -1,7 +1,7 @@
 
 # Explicitly list the source files which make up the library ...
 
-SET( SRCFILES "cmdline.cpp" "cmdoption.cpp" )
+SET( SRCFILES "optionparser.cpp" "optionvalue.cpp" "cmdline.cpp" )
 
 # Create the target for the build system ...
 

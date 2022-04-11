@@ -2,66 +2,59 @@
 #ifndef __CMD_CMDLINE_H
 #define __CMD_CMDLINE_H
 
-#include <cmdoption.h>
+#include "optionparser.h"
+#include "optionvalue.h"
+
+#include <cstring>
 #include <set>
 #include <map>
 #include <vector>
 
 
-#define CMD_UNDEFINED_OPTION 8000
-#define CMD_ILLEGAL_OPTION_TYPE 8010
-#define CMD_ILLEGAL_CMDLINE_PARAM 8020
-#define CMD_ILLEGAL_ARG_POSITION 8030
-#define CMD_ILLEGAL_OPTION_INDEX 8040
 
+class CmdLine : public OptionParser {
 
-
-class CmdLine {
 
     struct OptionData {
 
       bool         Required = false ;
       bool         HasDefault = false ;
-      OptionType   Type = OptionType::NONE ;
-      CmdOption    Default = {} ;
+      OptionValue  Default ;
       std::string  Info = "" ;
       std::string  Name = "" ;
       std::string  Unit = "" ;
 
     } ;
 
+
   public:
-
-    class Option {
-
-      friend class CmdLine ;
-
-      Option( int n ) : Index( n ) {}
-      int Index ;
-
-    } ;
 
     CmdLine( int argc, const char *argv[] ) ;
 
-    Option AddOption( OptionType, const char *, const char * = NULL ) ;
-    int AddOption( OptionType Type, int FirstIndex ) ;
-    int EnforceOption( Option Index, bool Enforce = true ) ;
-    int EnforceOption( int LastIndex, bool Enforce = true ) ;
-    int AddDefault( Option, const CmdOption &, const char * = NULL ) ;
-    int AddName( int FirstIndex, const char *Name = NULL ) ;
-    int AddName( Option Index, const char *Name ) ;
-    int AddHelp( Option Index, const std::string &Text ) ;
+    void Discard( void )  { delete this ; }
+
+    OptionIndex AddOption( const OptionValue &, const char *, const char * ) ;
+    int AddOption( int Type, int First, const char *Name ) ;
+    int EnforceOption( OptionIndex Option, bool Enforce ) ;
+    int EnforceOption( int LastIndex, bool Enforce ) ;
+    int UseDefault( OptionIndex, bool, const char * ) ;
+    int AddName( OptionIndex Option, const char *Name ) ;
+    int AddHelp( OptionIndex Option, const char *Text ) ;
     int Parse( void ) ;
-    int QueryOption( CmdOption &Result, Option Index = 0 ) ;
-    int NextOption( CmdOption &Result, Option Index = 0 ) ;
+    int QueryOption( OptionValue &Result, OptionIndex Option ) ;
+    int NextOption( OptionValue &Result ) ;
 
-    std::string Help( void ) const ;
-    std::string Usage( void ) const ;
+    int Help( char *Message, size_t Length ) const ;
+    int Usage( char *Message, size_t Length ) const ;
 
-    void SetPreamble( const std::string &Text ) ;
-    void SetEpilogue( const std::string &Text ) ;
+    void SetPreamble( const char *Text ) ;
+    void SetEpilogue( const char *Text ) ;
 
   private:
+
+    int Insert( int TypeIndex, int Index, std::string &sp ) ;
+    const char *InputType( int TypeIndex ) const ;
+    bool TypeSupported( int TypeIndex ) const ;
 
     std::string                             Command ;
     std::vector<std::string>                CommandLine ;
@@ -69,7 +62,8 @@ class CmdLine {
     std::map<std::string,int>               Long ;
     std::set<int>                           FirstIndex ;
     std::map<int,std::string>               FirstName ;
-    std::multimap<int,CmdOption>            Arguments ;
+    std::map<int,int>                       FirstType ;
+    std::multimap<int,OptionValue>          Arguments ;
 
     std::map<int,OptionData>                Data ;
 

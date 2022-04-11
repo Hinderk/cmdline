@@ -1,7 +1,7 @@
 
 ###############################################################################
 #
-#   Test the LR parser & grammar for the SMR assembler input ...
+#   Test the automatic generation of usage messages for the parser ...
 #
 ###############################################################################
 #
@@ -33,4 +33,8 @@ SET( TEST_BIN "driver-002" )
 # syntax: <Name 1> "<Switch 11> ...<Switch 1n>" <Name 2> "<Switch 21> ...
 # <Switch 2n>" <Name 3> "  " <Name 4> "<Switch 41> ...<Switch 4n>"
 
-SET( TEST_ARGS 01 "01" 02 "02" 03 "03" 04 "04" )
+SET( TEST_ARGS 01 "-v -f1.0 --float=-123.6e-8"
+               02 "--float 2.4e10 -f.005 -C 10"
+               03 "--count =3 --count= 9 --count = 12"
+               04 "--verbose string_a string_b string_c"
+               05 "--name = \"===\" -N filename" )

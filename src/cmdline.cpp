@@ -1,5 +1,9 @@
 
 #include "cmdline.h"
+#include "optionvalue.h"
+
+#include <sstream>
+#include <cstring>
 
 
 
@@ -19,58 +23,60 @@ CmdLine::CmdLine( int argc, const char *argv[] ) :
   OptionCounter( 0 ) ,
   LastIndex( 0 )
 {
-  Data[ 0 ].Type = OptionType::NONE ;   // account for arguments ...
+  Data[ 0 ] = {} ;             // account for arguments ...
 }
 
 
 
-CmdLine::Option CmdLine::AddOption( OptionType  TypeDesignation ,
-                                    const char *ShortOptionName ,
-                                    const char *LongOptionName  )
+OptionIndex CmdLine::AddOption( const OptionValue &Option          ,
+                                const char        *ShortOptionName ,
+                                const char        *LongOptionName  )
 {
-  int &Index = Short[ ShortOptionName ] ;
-  Index = Index ? Index : ++ NewOption ;
-  if ( LongOptionName )  Long[ LongOptionName ] = Index ;
-  Data[ Index ].Type = TypeDesignation ;
-  Data[ Index ].Required = false ;
-  Data[ Index ].HasDefault = false ;
-  Data[ Index ].Default = CmdOption() ;
-  Data[ Index ].Info = "" ;
-  Data[ Index ].Unit = "" ;
-  switch ( TypeDesignation )
+  if ( TypeSupported( Option.Type() ) )
   {
-    case OptionType::INTEGER:
-    case OptionType::UNSIGNED:
-      Data[ Index ].Name = "number" ;
-      break ;
-    case OptionType::FLOAT:
-      Data[ Index ].Name = "value" ;
-      break ;
-    case OptionType::STRING:
-      Data[ Index ].Name = "string" ;
-      break ;
-    default:
-      Data[ Index ].Name = "" ;
+    int &Index = Short[ ShortOptionName ] ;
+    Index = Index ? Index : ++ NewOption ;
+    if ( LongOptionName )  Long[ LongOptionName ] = Index ;
+    Data[ Index ].Required = false ;
+    Data[ Index ].HasDefault = false ;
+    Data[ Index ].Default = Option ;
+    Data[ Index ].Info = "" ;
+    Data[ Index ].Unit = "" ;
+    Data[ Index ].Name = InputType( Option.Type() ) ;
+    return OptionIndex( Index ) ;
   }
-  return Option( Index ) ;
+  return OptionIndex( -1 ) ;       // This option index is invalid!
 }
 
 
 
-int CmdLine::AddDefault( CmdLine::Option  OptionIndex ,
-                         const CmdOption &Value       ,
-                         const char      *UnitString  )
+int CmdLine::AddOption( int Type, int First, const char *Name )
 {
-  if ( Value.Type() == OptionType::BOOLEAN )
-    return CMD_ILLEGAL_OPTION_TYPE ;
-  if ( Data.count( OptionIndex.Index ) > 0 )
+  if ( First > 0 )
   {
-    if ( Data[ OptionIndex.Index ].Type == Value.Type() )
+    FirstIndex.insert( First ) ;
+    FirstType[ First ] = Type ;
+    if ( Name )
+      FirstName[ First ] = Name ;
+    else
+      FirstName[ First ] = InputType( Type ) ;
+    return 0 ;
+  }
+  return CMD_ILLEGAL_ARG_POSITION ;
+}
+
+
+
+int CmdLine::UseDefault( OptionIndex Option, bool Use, const char *Unit )
+{
+  if ( Data.count( Option.Index ) > 0 )
+  {
+    if ( Data[ Option.Index ].Default.Type() != CMD_BOOL_T )
     {
-      Data[ OptionIndex.Index ].Unit.clear() ;
-      if ( UnitString )  Data[ OptionIndex.Index ].Unit = UnitString ;
-      Data[ OptionIndex.Index ].Default = Value ;
-      Data[ OptionIndex.Index ].HasDefault = true ;
+      Data[ Option.Index ].Unit.clear() ;
+      if ( Unit )  Data[ Option.Index ].Unit = Unit ;
+      Data[ Option.Index ].HasDefault = Use ;
+      Data[ Option.Index ].Required &= !Use ;
       return 0 ;
     }
     return CMD_ILLEGAL_OPTION_TYPE ;
@@ -80,13 +86,13 @@ int CmdLine::AddDefault( CmdLine::Option  OptionIndex ,
 
 
 
-int CmdLine::EnforceOption( CmdLine::Option OI, bool Enforce )
+int CmdLine::EnforceOption( OptionIndex Option, bool Enforce )
 {
-  if ( Data.count( OI.Index ) > 0 )
+  if ( Data.count( Option.Index ) > 0 )
   {
-    if ( Data[ OI.Index ].Type != OptionType::BOOLEAN )
+    if ( Data[ Option.Index ].Default.Type() != CMD_BOOL_T )
     {
-      Data[ OI.Index ].Required = Enforce ;
+      Data[ Option.Index ].Required = Enforce ;
       return 0 ;
     }
     return CMD_ILLEGAL_OPTION_TYPE ;
@@ -109,7 +115,10 @@ int CmdLine::EnforceOption( int Index, bool Enforce )
       if ( i < Index )
         Indices.insert( i ) ;
       else
+      {
+        FirstType.erase( i ) ;
         FirstName.erase( i ) ;
+      }
     }
     swap( Indices, FirstIndex ) ;
   }
@@ -118,37 +127,16 @@ int CmdLine::EnforceOption( int Index, bool Enforce )
 
 
 
-int CmdLine::AddName( int Position, const char *Name )
+int CmdLine::AddName( OptionIndex Option, const char *Name )
 {
-  if ( Position > 0 )
+  if ( Option.Index > 0 )
   {
-    if ( Name )
-    {
-      FirstIndex.insert( Position ) ;
-      FirstName[ Position ] = Name ;
-    }
-    else
-    {
-      FirstIndex.erase( Position ) ;
-      FirstName.erase( Position ) ;
-    }
-    return 0 ;
-  }
-  return CMD_ILLEGAL_ARG_POSITION ;
-}
-
-
-
-int CmdLine::AddName( CmdLine::Option OI, const char *Name )
-{
-  if ( OI.Index > 0 )
-  {
-    if ( Data.count( OI.Index ) > 0 )
+    if ( Data.count( Option.Index ) > 0 )
     {
       if ( Name )
-        Data[ OI.Index ].Name = Name ;
+        Data[ Option.Index ].Name = Name ;
       else
-        Data[ OI.Index ].Name.clear() ;
+        Data[ Option.Index ].Name.clear() ;
       return 0 ;
     }
     return CMD_UNDEFINED_OPTION ;
@@ -158,13 +146,16 @@ int CmdLine::AddName( CmdLine::Option OI, const char *Name )
 
 
 
-int CmdLine::AddHelp( CmdLine::Option OI, const std::string &Text )
+int CmdLine::AddHelp( OptionIndex Option, const char *Text )
 {
-  if ( OI.Index > 0 )
+  if ( Option.Index > 0 )
   {
-    if ( Data.count( OI.Index ) > 0 )
+    if ( Data.count( Option.Index ) > 0 )
     {
-      Data[ OI.Index ].Info = Text ;
+      if ( Text )  
+        Data[ Option.Index ].Info = Text ;
+      else
+        Data[ Option.Index ].Info.clear() ;
       return 0 ;
     }
     return CMD_UNDEFINED_OPTION ;
@@ -174,26 +165,26 @@ int CmdLine::AddHelp( CmdLine::Option OI, const std::string &Text )
 
 
 
-int CmdLine::QueryOption( CmdOption &Result, CmdLine::Option OI )
+int CmdLine::QueryOption( OptionValue &Result, OptionIndex Option )
 {
-  OptionCounter = (int) Arguments.count( OI.Index ) ;
+  OptionCounter = (int) Arguments.count( Option.Index ) ;
   if ( OptionCounter > 0 )
   {
-    ActiveOption = OI.Index ;
+    ActiveOption = Option.Index ;
     for ( const auto &a : Arguments )
     {
-      if ( a.first == OI.Index )
+      if ( a.first == Option.Index )
       {
         Result = a.second ;
         return OptionCounter ;
       }
     }
   }
-  if ( Data.count( OI.Index ) )
+  if ( Data.count( Option.Index ) )
   {
-    if ( Data[ OI.Index ].HasDefault )
+    if ( Data[ Option.Index ].HasDefault )
     {
-      Result = Data[ OI.Index ].Default ;
+      Result = Data[ Option.Index ].Default ;
       OptionCounter = 1 ;
     }
   }
@@ -202,7 +193,7 @@ int CmdLine::QueryOption( CmdOption &Result, CmdLine::Option OI )
 
 
 
-int CmdLine::NextOption( CmdOption &Result, CmdLine::Option OI )
+int CmdLine::NextOption( OptionValue &Result )
 {
   if ( OptionCounter > 1 )
   {
@@ -222,9 +213,33 @@ int CmdLine::NextOption( CmdOption &Result, CmdLine::Option OI )
 
 
 
-std::string CmdLine::Usage( void ) const
+void CmdLine::SetPreamble( const char *Text )
+{
+  Preamble.clear() ;
+  if ( Text )  Preamble = Text ;
+}
+
+
+
+void CmdLine::SetEpilogue( const char *Text )
+{
+  Epilogue.clear() ;
+  if ( Text )  Epilogue = Text ;
+}
+
+
+
+int CmdLine::Help( char *Message, size_t Length ) const
+{
+  return 0 ;
+}
+
+
+
+int CmdLine::Usage( char *Message, size_t Length ) const
 {
   using namespace std ;
+  stringstream Content ;
   map<int,string> sopt, lopt, args ;
   for ( const auto &s : Short )  sopt[ s.second ] = s.first ;
   for ( const auto &l : Long )  lopt[ l.second ] = l.first ;
@@ -244,24 +259,24 @@ std::string CmdLine::Usage( void ) const
       {
         a += '(' ;
         entry += '|' + lopt[ c.first ] ;
-        if ( c.second.Type != OptionType::BOOLEAN )  entry += '=' ;
+        if ( c.second.Default.Type() != CMD_BOOL_T )  entry += '=' ;
         entry += ')' ;
       }
     }
     else if ( l > 0 )
     {
       entry = lopt[ c.first ] ;
-      if ( c.second.Type != OptionType::BOOLEAN )  entry += '=' ;
+      if ( c.second.Default.Type() != CMD_BOOL_T )  entry += '=' ;
     }
     else
       continue ;
-    if ( c.second.Type != OptionType::BOOLEAN )
+    if ( c.second.Default.Type() != CMD_BOOL_T )
     {
       entry += '<' + c.second.Name ;
       if ( c.second.HasDefault )
       {
         entry += ":=" ;
-        entry += c.second.Default.str() ;
+        entry += c.second.Default.GetString() ;
         entry += c.second.Unit ;
       }
       o = '>' ;
@@ -309,14 +324,186 @@ std::string CmdLine::Usage( void ) const
     Out += " <" + arg + '>' ;
   else if ( print )
     Out += " <" + arg + "_1> <" + arg + "_2> ..." ;
-  return Out ;
+  Buffer[ 0 ] = '\0' ;
+  if ( Out.size() < Length )
+  {
+    strncpy( Message, Out.c_str(), Length ) ;
+    return 0 ;
+  }
+  return CMD_BUFFER_SIZE_INSUFFICIENT ;
+}
+
+
+
+const char* CmdLine::InputType( int TypeIndex ) const
+{
+  switch ( TypeIndex )
+  {
+    case      CMD_INT8_T:
+    case     CMD_INT16_T:
+    case     CMD_INT32_T:
+    case     CMD_INT64_T:
+    case     CMD_UINT8_T:
+    case    CMD_UINT16_T:
+    case    CMD_UINT32_T:
+    case    CMD_UINT64_T:
+      return "number" ;
+    case   CMD_FLOAT32_T:
+    case   CMD_FLOAT64_T:
+    case   CMD_FLOAT96_T:
+      return "value" ;
+    case    CMD_STRING_T:
+      return "string" ;
+    case      CMD_CHAR_T:
+      return "character" ;
+    default: ;
+  }
+  return "input" ;
+}
+
+
+
+bool CmdLine::TypeSupported( int TypeIndex ) const
+{
+  switch ( TypeIndex )
+  {
+    case      CMD_INT8_T:
+    case     CMD_INT16_T:
+    case     CMD_INT32_T:
+    case     CMD_INT64_T:
+    case     CMD_UINT8_T:
+    case    CMD_UINT16_T:
+    case    CMD_UINT32_T:
+    case    CMD_UINT64_T:
+    case   CMD_FLOAT32_T:
+    case   CMD_FLOAT64_T:
+    case   CMD_FLOAT96_T:
+    case    CMD_STRING_T:
+    case      CMD_CHAR_T:
+      return true ;
+    default: ;
+  }
+  return false ;
+}
+
+
+
+int CmdLine::Insert( int Type, int Index, std::string &sp )
+{
+  char *end = NULL ;
+  errno = 0 ;
+  switch ( Type )
+  {
+    case CMD_INT8_T:
+    {
+      int64_t i = std::strtoll( sp.c_str(), &end, 10 ) ;
+      if ( *end || errno )  return CMD_ILLEGAL_CMDLINE_PARAM ;
+      int8_t Value = i ;
+      if ( ( i & 0xFF ) == i )
+        Arguments.insert( { Index, OptionValue( Value ) } ) ;
+      return 0 ;
+    }
+    case CMD_INT16_T:
+    {
+      int64_t i = std::strtoll( sp.c_str(), &end, 10 ) ;
+      if ( *end || errno )  return CMD_ILLEGAL_CMDLINE_PARAM ;
+      int16_t Value = i ;
+      if ( ( i & 0xFFFF ) == i )
+        Arguments.insert( { Index, OptionValue( Value ) } ) ;
+      return 0 ;
+    }
+    case CMD_INT32_T:
+    {
+      int64_t i = std::strtoll( sp.c_str(), &end, 10 ) ;
+      if ( *end || errno )  return CMD_ILLEGAL_CMDLINE_PARAM ;
+      int32_t Value = i ;
+      if ( ( i & 0xFFFFFFFF ) == i )
+        Arguments.insert( { Index, OptionValue( Value ) } ) ;
+      return 0 ;
+    }
+    case CMD_INT64_T:
+    {
+      int64_t i = std::strtoll( sp.c_str(), &end, 10 ) ;
+      if ( *end || errno )  return CMD_ILLEGAL_CMDLINE_PARAM ;
+      Arguments.insert( { Index, OptionValue( i ) } ) ;
+      return 0 ;
+    }
+    case CMD_UINT8_T:
+    {
+      uint64_t u = std::strtoull( sp.c_str(), &end, 10 ) ;
+      if ( *end || errno )  return CMD_ILLEGAL_CMDLINE_PARAM ;
+      uint8_t Value = u ;
+      if ( ( u & 0xFF ) == u )
+        Arguments.insert( { Index, OptionValue( Value ) } ) ;
+      return 0 ;
+    }
+    case CMD_UINT16_T:
+    {
+      uint64_t u = std::strtoull( sp.c_str(), &end, 10 ) ;
+      if ( *end || errno )  return CMD_ILLEGAL_CMDLINE_PARAM ;
+      uint16_t Value = u ;
+      if ( ( u & 0xFFFF ) == u )
+        Arguments.insert( { Index, OptionValue( Value ) } ) ;
+      return 0 ;
+    }
+    case CMD_UINT32_T:
+    {
+      uint64_t u = std::strtoull( sp.c_str(), &end, 10 ) ;
+      if ( *end || errno )  return CMD_ILLEGAL_CMDLINE_PARAM ;
+      uint32_t Value = u ;
+      if ( ( u & 0xFFFFFFFF ) == u )
+        Arguments.insert( { Index, OptionValue( Value ) } ) ;
+      return 0 ;
+    }
+    case CMD_UINT64_T:
+    {
+      uint64_t u = std::strtoull( sp.c_str(), &end, 10 ) ;
+      if ( *end || errno )  return CMD_ILLEGAL_CMDLINE_PARAM ;
+      Arguments.insert( { Index, OptionValue( u ) } ) ;
+      return 0 ;
+    }
+    case CMD_FLOAT32_T:
+    {
+      float fp = std::strtof( sp.c_str(), &end ) ;
+      if ( *end || errno )  return CMD_ILLEGAL_CMDLINE_PARAM ;
+      Arguments.insert( { Index, OptionValue( fp ) } ) ;
+      return 0 ;
+    }
+    case CMD_FLOAT64_T:
+    {
+      double fp = std::strtod( sp.c_str(), &end ) ;
+      if ( *end || errno )  return CMD_ILLEGAL_CMDLINE_PARAM ;
+      Arguments.insert( { Index, OptionValue( fp ) } ) ;
+      return 0 ;
+    }
+    case CMD_FLOAT96_T:
+    {
+      long double fp = std::strtold( sp.c_str(), &end ) ;
+      if ( *end || errno )  return CMD_ILLEGAL_CMDLINE_PARAM ;
+      Arguments.insert( { Index, OptionValue( fp ) } ) ;
+      return 0 ;
+    }
+    case CMD_STRING_T:
+      Arguments.insert( { Index, OptionValue( sp ) } ) ;
+      return 0 ;
+    case CMD_CHAR_T:
+      if ( sp.size() == 1 )
+      {
+        Arguments.insert( { Index, OptionValue( sp[0] ) } ) ;
+        return 0 ;
+      }
+    default: ;
+  }
+  return CMD_ILLEGAL_CMDLINE_PARAM ;
 }
 
 
 
 int CmdLine::Parse( void )
 {
+  int OptionCounter = 0 ;
   int CurrentIndex = 0 ;
+  int CurrentType = CMD_STRING_T ;
   int State = 0 ;
   bool SkipEqualSign = false ;
   char *end = NULL ;
@@ -337,9 +524,9 @@ int CmdLine::Parse( void )
     {
       CurrentIndex = Short[ s ] ;
       GetValue = false ;
-      if ( Data[ CurrentIndex ].Type == OptionType::BOOLEAN )
+      if ( Data[ CurrentIndex ].Default.Type() == CMD_BOOL_T )
       {
-        Arguments.insert( { CurrentIndex, CmdOption( true ) } ) ;
+        Arguments.insert( { CurrentIndex, OptionValue( true ) } ) ;
         CurrentIndex = 0 ;
       }
     }
@@ -348,9 +535,9 @@ int CmdLine::Parse( void )
       CurrentIndex = Long[ s ] ;
       SkipEqualSign = true ;          //  --option = value
       GetValue = false ;
-      if ( Data[ CurrentIndex ].Type == OptionType::BOOLEAN )
+      if ( Data[ CurrentIndex ].Default.Type() == CMD_BOOL_T )
       {
-        Arguments.insert( { CurrentIndex, CmdOption( true ) } ) ;
+        Arguments.insert( { CurrentIndex, OptionValue( true ) } ) ;
         CurrentIndex = 0 ;
       }
     }
@@ -369,48 +556,23 @@ int CmdLine::Parse( void )
       sp = s ;
     if ( GetValue )
     {
-      switch ( Data[ CurrentIndex ].Type )
+      int N = CurrentIndex ;
+      int Type = Data[ CurrentIndex ].Default.Type() ;
+      switch ( Type )
       {
-        case OptionType::BOOLEAN:
+        case CMD_BOOL_T:
           State = CMD_ILLEGAL_CMDLINE_PARAM ;
           break ;
-        case OptionType::NONE:
+        case CMD_UNDEFINED_T:
         {
-          Arguments.insert( { 0, CmdOption( sp ) } ) ;
-          break ;
+          if ( FirstIndex.count( ++ OptionCounter ) )
+            CurrentType = FirstType[ OptionCounter ] ;
+          N = 0 ;
+          Type = CurrentType ;
         }
-        case OptionType::INTEGER:
+        default:
         {
-          int64_t i = std::strtoll( sp.c_str(), &end, 10 ) ;
-          if ( *end )
-            State = CMD_ILLEGAL_CMDLINE_PARAM ;
-          else
-            Arguments.insert( { CurrentIndex, CmdOption( i ) } ) ;
-          break ;
-        }
-        case OptionType::FLOAT:
-        {
-          double val = std::strtod( sp.c_str(), &end ) ;
-          if ( *end )
-            State = CMD_ILLEGAL_CMDLINE_PARAM ;
-          else
-            Arguments.insert( { CurrentIndex, CmdOption( val ) } ) ;
-          break ;
-        }
-        case OptionType::UNSIGNED:
-        {
-          int64_t i = std::strtoll( sp.c_str(), &end, 10 ) ;
-          uint64_t nr( i ) ;
-          if ( *end || i < 0 )
-            State = CMD_ILLEGAL_CMDLINE_PARAM ;
-          else
-            Arguments.insert( { CurrentIndex, CmdOption( nr ) } ) ;
-          break ;
-        }
-        case OptionType::STRING:
-        {
-          Arguments.insert( { CurrentIndex, CmdOption( sp ) } ) ;
-          break ;
+          State = Insert(Type,N,sp) ? CMD_ILLEGAL_CMDLINE_PARAM : State ;
         }
       }
       SkipEqualSign = false ;

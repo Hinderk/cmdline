@@ -1,7 +1,7 @@
 
 ###############################################################################
 #
-#   Test the basic functionality of the command line parser ...
+#   Test the new implementation of the OptionValue class ...
 #
 ###############################################################################
 #
@@ -14,14 +14,14 @@
 
 # This string below is used to identify the test. 
 
-SET( TEST_NAME "Parser" )
+SET( TEST_NAME "OptionValue" )
 
 # The name of the binary to be invoked by the "CTest" subsystem. Note
 # that in some cases the test driver may be some script, which resides
 # in the source tree. In such a situation further CMake directives 
 # may be included in this file to setup the test environment...
 
-SET( TEST_BIN "driver-001" )
+SET( TEST_BIN "driver-004" )
 
 # The following list, contained in the variable TEST_ARGS, may be used to 
 # define arguments which will be passed on to the test driver specified by

@@ -2,111 +2,169 @@
 #ifndef __CMD_CMDOPTION_H
 #define __CMD_CMDOPTION_H
 
-#include <stdexcept>
-#include <string>
-#include <limits>
+#include <cstdint>
+#include <cstddef>
+#include <typeinfo>
 
 
-#define _TYPE(X) { static constexpr OptionType value = OptionType::X ; }
+#define __ID(T,N)  TypeIndex<T> { static constexpr int value = N ; }
 
 
+#define     CMD_UNDEFINED_T   0x00
+#define          CMD_BOOL_T   0x01
+#define          CMD_INT8_T   0x02
+#define         CMD_INT16_T   0x03
+#define         CMD_INT32_T   0x04
+#define         CMD_INT64_T   0x05
+#define        CMD_INT128_T   0x06
+#define         CMD_UINT8_T   0x07
+#define        CMD_UINT16_T   0x08
+#define        CMD_UINT32_T   0x09
+#define        CMD_UINT64_T   0x0a
+#define       CMD_UINT128_T   0x0b
+#define       CMD_FLOAT32_T   0x0c
+#define       CMD_FLOAT64_T   0x0d
+#define       CMD_FLOAT96_T   0x0e
+#define        CMD_STRING_T   0x0f
+#define         CMD_ARRAY_T   0x12
+#define          CMD_CHAR_T   0x13
 
-enum class OptionType { NONE, BOOLEAN, INTEGER, STRING, FLOAT, UNSIGNED } ;
+
+namespace __CMD {
 
 
-template < typename T > struct TypeIndex _TYPE(NONE) ;
+  template < typename T > struct TypeIndex
+  {
+    static constexpr int value = CMD_UNDEFINED_T ;
+  } ;
 
-template<> struct TypeIndex< int8_t > _TYPE(INTEGER) ;
-template<> struct TypeIndex< int16_t > _TYPE(INTEGER) ;
-template<> struct TypeIndex< int32_t > _TYPE(INTEGER) ;
-template<> struct TypeIndex< int64_t > _TYPE(INTEGER) ;
-template<> struct TypeIndex< uint8_t > _TYPE(UNSIGNED) ;
-template<> struct TypeIndex< uint16_t > _TYPE(UNSIGNED) ;
-template<> struct TypeIndex< uint32_t > _TYPE(UNSIGNED) ;
-template<> struct TypeIndex< uint64_t > _TYPE(UNSIGNED) ;
-template<> struct TypeIndex< float > _TYPE(FLOAT) ;
-template<> struct TypeIndex< double > _TYPE(FLOAT) ;
-template<> struct TypeIndex< bool > _TYPE(BOOLEAN) ;
-template<> struct TypeIndex< char > _TYPE(INTEGER) ;
 
+  template<> struct __ID( int16_t, CMD_INT16_T ) ;
+  template<> struct __ID( int32_t, CMD_INT32_T ) ;
+  template<> struct __ID( int64_t, CMD_INT64_T ) ;
+  template<> struct __ID( float, CMD_FLOAT32_T ) ;
+  template<> struct __ID( double, CMD_FLOAT64_T ) ;
+  template<> struct __ID( long double, CMD_FLOAT96_T ) ;
+  template<> struct __ID( uint16_t, CMD_UINT16_T ) ;
+  template<> struct __ID( uint32_t, CMD_UINT32_T ) ;
+  template<> struct __ID( uint64_t, CMD_UINT64_T ) ;
+  template<> struct __ID( bool, CMD_BOOL_T ) ;
+  template<> struct __ID( char, CMD_CHAR_T ) ;
+  template<> struct __ID( int8_t, CMD_INT8_T ) ;
+  template<> struct __ID( uint8_t, CMD_UINT8_T ) ;
+  template<> struct __ID( const char *, CMD_STRING_T ) ;
+
+
+}  // End of namespace __CMD
+
+
+class OptionValue ;
 
 
 class CmdOption {
 
+    friend class OptionValue ;
+
   public:
 
-    CmdOption( const std::string &name ) ;
-    CmdOption( const char *name ) ;
-    CmdOption( void ) ;
 
-    template < class T > CmdOption( T val ) : value(), opt {}
+    CmdOption( void ) : Handle( NULL ) {}
+
+   ~CmdOption( void ) {}
+
+
+//   ~CmdOption( void ) { this -> Discard( Handle ) ; }
+
+
+//    CmdOption( const char Text[] )
+//    {
+//      DataHandle *Item = new DataItem<const char *>( Text ) ;
+//      Handle = this -> Copy( CMD_STRING_T, Item ) ;
+//      delete Item ; 
+//    } 
+
+
+//    template < typename T > CmdOption( const T &val )
+//    {
+//      DataHandle *Item = new DataItem<T>( val ) ;
+//      Handle = this -> Copy( __CMD::TypeIndex<T>::value, Item ) ; 
+//      delete Item ;
+//    }
+
+
+//    template < typename T > CmdOption& operator=( const T &val )
+//    {
+//      DataHandle *Item = new DataItem<T>( val ) ;
+//      Handle = this -> Copy( __CMD::TypeIndex<T>::value, Item ) ;
+//      delete Item ;
+//      return *this ;
+//    }
+
+
+//    CmdOption& operator=( const CmdOption &CO )
+//    {
+//      if ( this == &CO )  return *this ;
+//      if ( Handle )  delete Handle ; 
+//      Handle = this -> Copy( CO.Type(), CO.Handle ) ;
+//      return *this ;
+//    }
+
+
+//    CmdOption( const CmdOption &CO ) { this -> operator=( CO ) ; }
+
+
+
+    template < typename T > operator T( void ) const
     {
-      type = TypeIndex<T>::value ;
-      switch ( TypeIndex<T>::value )
+      if ( this -> Type() == __CMD::TypeIndex<T>::value )
       {
-        case OptionType::INTEGER:
-          opt.index = (int64_t) val ;
-          break ;
-        case OptionType::FLOAT:
-          opt.fpval = (double) val ;
-          break ;
-        case OptionType::BOOLEAN:
-          opt.logical = val ;
-          break ;
-        case OptionType::UNSIGNED:
-          opt.number = (uint64_t) val ;
-        default: ;
+        return static_cast< DataItem<T>* >( Handle ) -> Item ;
       }
+      throw std::bad_cast() ;
     }
 
-    template < class T > operator T( void ) const
-    {
-      switch ( TypeIndex<T>::value )
+
+    int Type( void ) const
+    { 
+      return Handle ? Handle -> Type() : CMD_UNDEFINED_T ;
+    } 
+
+
+  protected:
+
+    struct DataHandle {
+
+      virtual ~DataHandle( void ) {} ;
+
+      virtual int Type( void ) const  = 0 ;
+
+    } ;
+
+    template < typename T >
+    struct DataItem : public DataHandle {
+
+      DataItem( const T &val ) : Item( val ) {}
+
+      virtual int Type( void ) const
       {
-        case OptionType::INTEGER:
-          if ( opt.index <= (int64_t) std::numeric_limits<T>::max() &&
-               (int64_t) std::numeric_limits<T>::lowest() <= opt.index )
-            return (T) opt.index ;
-          throw std::domain_error( "Option value out of range." ) ;
-        case OptionType::FLOAT:
-          if ( opt.fpval <= (double) std::numeric_limits<T>::max() &&
-               (double) std::numeric_limits<T>::lowest() <= opt.fpval )
-            return (T) opt.fpval ;
-          throw std::domain_error( "Option value out of range." ) ;
-        case OptionType::BOOLEAN:
-          return opt.logical ;
-        case OptionType::UNSIGNED:
-          if ( opt.number <= (uint64_t) std::numeric_limits<T>::max() &&
-               (uint64_t) std::numeric_limits<T>::lowest() <= opt.number )
-            return (T) opt.number ;
-          throw std::domain_error( "Option value out of range." ) ;
-        default:
-          throw std::domain_error( "Invalid cast from option." ) ;
+        return __CMD::TypeIndex<T>::value ;
       }
-      return T {} ;
+
+      const T Item ;
+
+    } ;
+
+    virtual void Discard( DataHandle * ) {}  // Handle will be NULL ...
+
+    virtual DataHandle* Copy( int, const DataHandle * )
+    { 
+      return NULL ;            // Void base class may be contructed ...
     }
 
-    OptionType Type( void ) const { return type ; }
-
-    const char *str( void ) const ;
-
-  private:
-
-    OptionType  type ;
-
-    std::string value ;
-
-    union {
-
-      double      fpval ;
-      int64_t     index ;
-      uint64_t    number ;
-      bool        logical ;
-
-    } opt ;
+    DataHandle *Handle ;
 
 } ;
 
-#undef _TYPE
+#undef __ID
 
 #endif     // __CMD_CMDOPTION_H

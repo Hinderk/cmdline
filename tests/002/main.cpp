@@ -10,39 +10,40 @@
 int main( int argc, const char *argv[] )
 {
   CmdLine Options( argc, argv ) ;
-  CmdLine::Option Type[] = {
-    Options.AddOption( OptionType::FLOAT, "-f", "--float" ) ,
-    Options.AddOption( OptionType::UNSIGNED, "-C", "--count" ) ,
-    Options.AddOption( OptionType::INTEGER, "-i", "--index" ) ,
-    Options.AddOption( OptionType::BOOLEAN, "-v", "--verbose" ) ,
-    Options.AddOption( OptionType::STRING, "-N", "--name" )
+  OptionIndex Type[] = {
+    Options.AddOption( 55.5f, "-f", "--float" ) ,
+    Options.AddOption( 10u, "-C", "--count" ) ,
+    Options.AddOption( -120, "-i", "--index" ) ,
+    Options.AddOption( false, "-v", "--verbose" ) ,
+    Options.AddOption( "The Message!", "-N", "--name" )
   } ;
   int state = Options.Parse() ;
   if ( state )  return state ;
 
-  Options.AddDefault( Type[0], 55.5, "m/s" ) ;
-  Options.AddDefault( Type[1], 10u, "hours" ) ;
-  Options.AddDefault( Type[2], -120 ) ;
-  Options.AddDefault( Type[4], "The Message!" ) ;
+  Options.UseDefault( Type[0], true, "m/s" ) ;
+  Options.UseDefault( Type[1], true, "hours" ) ;
+  Options.UseDefault( Type[2], true, NULL ) ;
+  Options.UseDefault( Type[4], true, NULL ) ;
 
-  state = Options.AddDefault( Type[3], true ) ;   // No defaults for boolean
-  if ( state == 0 )  return -1 ;                  // options. Expect error!
+  state = Options.UseDefault( Type[3], true, NULL ) ;   // No defaults here!
+  if ( state == 0 )  return -1 ;                        // Expect error ...
 
   Options.AddName( Type[0], "Rate" ) ;
 
-  Options.AddName( 1, "File" ) ;
-  Options.AddName( 5, "Output" ) ;
-  Options.AddName( 7, "Test" ) ;
+  Options.AddOption( CMD_STRING_T, 1, "File" ) ;
+  Options.AddOption( CMD_STRING_T, 5, "Output" ) ;
+  Options.AddOption( CMD_FLOAT32_T, 7, "Test" ) ;
 
-  state = Options.EnforceOption( Type[3] ) ;
+  state = Options.EnforceOption( Type[3], true ) ;
   if ( state == 0 )  return -2 ;
 
 
-  Options.EnforceOption( 9 ) ;
+  Options.EnforceOption( 9, true ) ;
 //  Options.EnforceOption( 6, false ) ;
 
-
-  std::cout << Options.Usage() << "\n" ;
+  char Message[ 1024 ] ;
+  Options.Usage( Message, 1024 ) ;
+  std::cout << Message << "\n" ;
 
   return 0 ;
 }
