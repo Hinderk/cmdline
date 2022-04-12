@@ -2,8 +2,8 @@
 #ifndef __CMD_CMDLINE_H
 #define __CMD_CMDLINE_H
 
-#include "optionparser.h"
-#include "optionvalue.h"
+#include "cmdline/optionparser.h"
+#include "cmdline/optionvalue.h"
 
 #include <cstring>
 #include <set>

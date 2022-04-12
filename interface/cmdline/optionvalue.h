@@ -4,8 +4,8 @@
 
 #include <string>
 
-#include "cmdexport.h"
-#include "cmdoption.h"
+#include "cmdline/cmdexport.h"
+#include "cmdline/cmdoption.h"
 
 
 
@@ -23,10 +23,10 @@ class CMDLINE_EXPORT OptionValue : public CmdOption {
     {
       const DataItem<T> Item( val ) ;
       Handle = Create( __CMD::TypeIndex<T>::value, &Item, this ) ;
-    } 
-      
+    }
+
     OptionValue( const OptionValue &OV ) ;
-    OptionValue( void ) ; 
+    OptionValue( void ) ;
    ~OptionValue( void ) ;
 
     OptionValue& operator=( const OptionValue &OV ) ;

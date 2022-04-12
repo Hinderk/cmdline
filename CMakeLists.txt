@@ -3,7 +3,9 @@ CMAKE_MINIMUM_REQUIRED( VERSION 3.15 )
 
 PROJECT( COMMANDLINE_PARSER VERSION 1.0.0 LANGUAGES CXX )
 
-# Specifiy the name of the library ...
+# Specifiy the name of the library. Certain generated header files
+# interact with the source code of the library & will surely break
+# the code if this string is changed.
 
 SET( LIBNAME "CmdLine" )
 
@@ -15,8 +17,6 @@ IF( NOT DEFINED CMAKE_CXX_VISIBILITY_PRESET AND
   SET( CMAKE_CXX_VISIBILITY_PRESET "hidden" )
   SET( CMAKE_VISIBILITY_INLINES_HIDDEN YES )
 ENDIF()
-
-## SET( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON )
 
 # Specify version information for the project:
 

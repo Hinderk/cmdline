@@ -2,8 +2,9 @@
 INCLUDE( GNUInstallDirs )
 INCLUDE( CMakePackageConfigHelpers )
 
-# As various package management systems have different standards where to put CMake 
-# package configuration scripts a cache variable is created to allow for user input. 
+# As various package management systems have different standards where to
+# put CMake package configuration scripts a cache variable is created to
+# allow for user input.
 
 IF ( NOT DEFINED CMDLINE_INSTALL_CMAKEDIR )
   SET( 
@@ -14,7 +15,8 @@ IF ( NOT DEFINED CMDLINE_INSTALL_CMAKEDIR )
 )
 ENDIF()
 
-INSTALL( TARGETS ${LIBNAME} EXPORT ${LIBNAME}_Targets
+INSTALL( TARGETS ${LIBNAME}
+         EXPORT ${LIBNAME}_Targets
          RUNTIME  COMPONENT ${LIBNAME}_Runtime
          LIBRARY  COMPONENT ${LIBNAME}_Runtime
          NAMELINK_COMPONENT ${LIBNAME}_Development
@@ -23,7 +25,7 @@ INSTALL( TARGETS ${LIBNAME} EXPORT ${LIBNAME}_Targets
 
 INSTALL( 
   DIRECTORY 
-    "${CMAKE_SOURCE_DIR}/include/" 
+    "${CMAKE_SOURCE_DIR}/interface/"
     "${CMAKE_BINARY_DIR}/src/include/"
   TYPE INCLUDE
   COMPONENT ${LIBNAME}_Development
@@ -56,4 +58,21 @@ INSTALL(
     "${CMAKE_CURRENT_BINARY_DIR}/${LIBNAME}ConfigVersion.cmake"
   DESTINATION "${CMDLINE_INSTALL_CMAKEDIR}"
   COMPONENT ${LIBNAME}_Development
+)
+
+# Create a custom uninstall target to undo a previous install.
+
+ADD_CUSTOM_TARGET( "uninstall"
+  COMMENT "Remove any previously installed files" )
+
+ADD_CUSTOM_COMMAND(
+  TARGET "uninstall"
+  POST_BUILD
+  COMMENT "Removing all files listed in 'install_manifest.txt' ..."
+  COMMAND
+    if [ -f ${CMAKE_BINARY_DIR}/install_manifest.txt ] \; then
+      xargs rm -fv < ${CMAKE_BINARY_DIR}/install_manifest.txt \;
+    else
+      echo "Manifest not found - nothing to do!" \;
+    fi
 )

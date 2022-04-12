@@ -2,9 +2,7 @@
 #ifndef __CMD_OPTIONPARSER_H
 #define __CMD_OPTIONPARSER_H
 
-#include <cstddef>
-#include "optionvalue.h"
-#include "cmdexport.h"
+#include "cmdline/optionvalue.h"
 
 #define CMD_UNDEFINED_OPTION 8000
 #define CMD_ILLEGAL_OPTION_TYPE 8010

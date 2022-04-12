@@ -1,6 +1,5 @@
 
-#include "cmdline.h"
-#include "optionvalue.h"
+#include "cmdline/cmdline.h"
 
 #include <sstream>
 #include <cstring>
@@ -152,7 +151,7 @@ int CmdLine::AddHelp( OptionIndex Option, const char *Text )
   {
     if ( Data.count( Option.Index ) > 0 )
     {
-      if ( Text )  
+      if ( Text )
         Data[ Option.Index ].Info = Text ;
       else
         Data[ Option.Index ].Info.clear() ;

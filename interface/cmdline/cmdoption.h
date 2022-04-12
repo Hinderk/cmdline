@@ -3,6 +3,7 @@
 #define __CMD_CMDOPTION_H
 
 #include <cstdint>
+#include <cstddef>
 #include <typeinfo>
 
 
@@ -91,9 +92,9 @@ class CmdOption {
     virtual ~CmdOption( void ) {}
 
     int Type( void ) const
-    { 
+    {
       return Handle ? Handle -> Type() : CMD_UNDEFINED_T ;
-    } 
+    }
 
     template < typename T > operator T( void ) const
     {

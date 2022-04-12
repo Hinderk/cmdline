@@ -33,4 +33,4 @@ SET( TEST_BIN "driver-002" )
 # syntax: <Name 1> "<Switch 11> ...<Switch 1n>" <Name 2> "<Switch 21> ...
 # <Switch 2n>" <Name 3> "  " <Name 4> "<Switch 41> ...<Switch 4n>"
 
-SET( TEST_ARGS 01 " " )
+SET( TEST_ARGS 01 "0" )

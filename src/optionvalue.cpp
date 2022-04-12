@@ -1,5 +1,5 @@
 
-#include "optionvalue.h"
+#include "cmdline/optionvalue.h"
 
 #include <sstream>
 #include <string.h>
@@ -10,7 +10,7 @@ typedef CmdOption::DataHandle DataHandle ;
 
 
 std::string OptionValue::GetString( void ) const
-{ 
+{
   std::stringstream Out ;
   switch ( Type() )
   {
