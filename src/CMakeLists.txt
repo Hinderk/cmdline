@@ -19,15 +19,15 @@ INCLUDE( GenerateExportHeader )
 
 GENERATE_EXPORT_HEADER( 
   ${LIBNAME} 
-  EXPORT_FILE_NAME "include/cmdexports.h"
+  EXPORT_FILE_NAME "include/cmdexport.h"
 )
 
 # The following compiler switches are used to configure the build 
 # process on all Unix systems which use GNU development tools.
 
-IF( UNIX )
-  ADD_DEFINITIONS( -frtti )
-ENDIF( UNIX )
+#IF( UNIX )
+#  ADD_DEFINITIONS( -frtti )
+#ENDIF( UNIX )
 
 # The following settings are used to build the library with some
 # native C++ compiler on a Windows box (e.g. VS2019):
@@ -45,7 +45,8 @@ TARGET_INCLUDE_DIRECTORIES(
   ${LIBNAME} 
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BUILD_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../interface>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 

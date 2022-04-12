@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include "optionvalue.h"
+#include "cmdexport.h"
 
 #define CMD_UNDEFINED_OPTION 8000
 #define CMD_ILLEGAL_OPTION_TYPE 8010
@@ -29,8 +30,9 @@ class OptionIndex {
 
 extern "C" {
 
-  OptionParser* CreateOptionParser( int argc, const char *argv[] ) ;
-  void DestroyOptionParser( OptionParser *Parser ) ;
+  CMDLINE_EXPORT OptionParser *
+    CreateOptionParser( int argc, const char *argv[] ) ;
+  CMDLINE_EXPORT void DestroyOptionParser( OptionParser *Parser ) ;
 
 }
 

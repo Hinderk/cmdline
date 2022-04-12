@@ -3,11 +3,13 @@
 #define __CMD_OPTIONVALUE_H
 
 #include <string>
+
+#include "cmdexport.h"
 #include "cmdoption.h"
 
 
 
-class OptionValue : public CmdOption {
+class CMDLINE_EXPORT OptionValue : public CmdOption {
 
   public:
 
@@ -27,14 +29,14 @@ class OptionValue : public CmdOption {
     OptionValue( void ) ; 
    ~OptionValue( void ) ;
 
-    OptionValue& operator=( const OptionValue &In ) ;
+    OptionValue& operator=( const OptionValue &OV ) ;
 
     std::string GetString( void ) const ;
 
   private:
 
-    void Discard( const DataHandle *Data ) ;
-    DataHandle* Copy( int Index, const DataHandle *Input ) ;
+    CMDLINE_NO_EXPORT void Discard( const DataHandle * ) ;
+    CMDLINE_NO_EXPORT DataHandle* Copy( int, const DataHandle * ) ;
 
 } ;
 
