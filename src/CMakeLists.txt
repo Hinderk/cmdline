@@ -24,11 +24,10 @@ GENERATE_EXPORT_HEADER(
 
 # Append the letter 'd' if the library contains debug symbols ...
 
-STRING( TOLOWER "${CMAKE_BUILD_TYPE}" NORM_TYPE_LOWER_CASE )
-IF( ${NORM_TYPE_LOWER_CASE} MATCHES "debug" )
+IF( CMDLINE_DEBUG_SYMBOLS )
   STRING( PREPEND CMAKE_STATIC_LIBRARY_SUFFIX "d" )
   STRING( PREPEND CMAKE_SHARED_LIBRARY_SUFFIX "d" )
-ENDIF()
+ENDIF( CMDLINE_DEBUG_SYMBOLS )
 
 # The following compiler switches are used to configure the build 
 # process on all Unix systems which use GNU development tools.

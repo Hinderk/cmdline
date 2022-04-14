@@ -1,7 +1,7 @@
 
 CMAKE_MINIMUM_REQUIRED( VERSION 3.15 )
 
-PROJECT( COMMANDLINE_PARSER VERSION 1.0.0 LANGUAGES CXX )
+PROJECT( "CmdLine" VERSION 1.0.0 LANGUAGES CXX )
 
 # Specifiy the name of the library. Certain generated header files
 # interact with the source code of the library & will surely break
@@ -33,13 +33,34 @@ STRING( COMPARE EQUAL
   PROVIDE_OPTIONS
 )
 
+# Detect the presence of debug symbols in the compiler artifacts
+# as this may affect the packaging of the library ...
+
+SET( CMDLINE_DEBUG_SYMBOLS OFF )
+SET( CMDLINE_RELEASE_BUILD ON )
+IF( DEFINED CMAKE_BUILD_TYPE AND CMAKE_BUILD_TYPE )
+  STRING( TOUPPER "${CMAKE_BUILD_TYPE}" NORMALISED_BUILD_TYPE )
+  IF( ${NORMALISED_BUILD_TYPE} MATCHES "DEBUG" OR
+      ${NORMALISED_BUILD_TYPE} MATCHES "RELWITHDEBINFO" )
+    SET( CMDLINE_RELEASE_BUILD OFF )
+    SET( CMDLINE_DEBUG_SYMBOLS ON )
+    OPTION( CMDLINE_SEPARATE_DEBUG_SYMBOLS
+            "Create a separate package with debug symbols."
+            OFF
+    )
+    IF( CMDLINE_SEPARATE_DEBUG_SYMBOLS )
+      SET( CMDLINE_DEBUG_SYMBOLS OFF )
+    ENDIF()
+  ENDIF()
+ENDIF()
+
 # Facilitate the generation of a shared library if the variable
 # CMDLINE_BUILD_SHARED_LIB has been defined.
 
 IF ( PROVIDE_OPTIONS )
   OPTION(
     CMDLINE_BUILD_SHARED_LIB
-    "Create a shared library (DLL)"
+    "Create a shared library (dll)."
     YES 
   )
 ENDIF( PROVIDE_OPTIONS )

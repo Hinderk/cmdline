@@ -19,7 +19,7 @@ INSTALL( TARGETS ${LIBNAME}
          EXPORT ${LIBNAME}_Targets
          RUNTIME  COMPONENT ${LIBNAME}_Runtime
          LIBRARY  COMPONENT ${LIBNAME}_Runtime
-         NAMELINK_COMPONENT ${LIBNAME}_Development
+         NAMELINK_COMPONENT ${LIBNAME}_Runtime
          ARCHIVE  COMPONENT ${LIBNAME}_Development
          INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" )
 
@@ -76,3 +76,15 @@ ADD_CUSTOM_COMMAND(
       echo "Manifest not found - nothing to do!" \;
     fi
 )
+
+# Proceed to configure the generator 'CPack' for a binary installer ...
+
+INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.cmake" ) 
+
+IF( UNIX )
+  INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.deb.cmake" ) 
+ELSE( UNIX )
+  INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.nsis.cmake" ) 
+ENDIF( UNIX )
+
+INCLUDE( CPack )
