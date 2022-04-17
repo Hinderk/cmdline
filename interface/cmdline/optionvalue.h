@@ -23,6 +23,8 @@ class CMDLINE_EXPORT OptionValue : public CmdOption {
     {
       const DataItem<T> Item( val ) ;
       Handle = Create( __CMD::TypeIndex<T>::value, &Item, this ) ;
+
+   //  Handle = new DataItem<T>( val ) ;
     }
 
     OptionValue( const OptionValue &OV ) ;

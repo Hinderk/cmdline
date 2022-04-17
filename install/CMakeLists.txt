@@ -84,7 +84,7 @@ INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.cmake" )
 IF( UNIX )
   INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.deb.cmake" ) 
 ELSE( UNIX )
-  INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.nsis.cmake" ) 
+  INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.wix.cmake" ) 
 ENDIF( UNIX )
 
 INCLUDE( CPack )
