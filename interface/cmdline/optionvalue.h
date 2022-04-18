@@ -4,12 +4,16 @@
 
 #include <string>
 
+extern FILE *Log ;
+
 #include "cmdline/cmdexport.h"
 #include "cmdline/cmdoption.h"
 
 
 
 class CMDLINE_EXPORT OptionValue : public CmdOption {
+
+#include "memdebug.h"
 
   public:
 

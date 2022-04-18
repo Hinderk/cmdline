@@ -29,6 +29,8 @@ class CmdLine : public OptionParser {
 
   public:
 
+#include "memdebug.h"
+
     CmdLine( int argc, const char *argv[] ) ;
 
     void Discard( void )  { delete this ; }

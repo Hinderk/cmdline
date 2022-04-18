@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <memory>
 
+extern FILE *Log ;
+
+#define __CMD_MAIN
+
 #include "cmdline/optionparser.h"
 
 

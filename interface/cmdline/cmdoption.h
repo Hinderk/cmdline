@@ -70,6 +70,8 @@ namespace __CMD {
   template < typename T >
   struct DataItem : public DataHandle {
 
+#include "memdebug.h"
+
     DataItem( const T &val ) : Item( val ) {}
 
     void Discard( void )  { delete this ; }
@@ -98,6 +100,8 @@ namespace __CMD {
 
   template<>
   struct DataItem<const char *> : public DataHandle {
+
+#include "memdebug.h"
 
     DataItem( const char *String )
     {
@@ -134,6 +138,8 @@ namespace __CMD {
 class CmdOption {
 
   public:
+
+#include "memdebug.h"
 
     virtual ~CmdOption( void ) {}
 

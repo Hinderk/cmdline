@@ -15,6 +15,7 @@ IF( CMDLINE_TEST_CMAKE_INSTALLER )
     SET( SOURCES "main.cpp" )
     SET( TESTBIN "driver-004" )
     ADD_EXECUTABLE( ${TESTBIN} ${SOURCES} )
+    INCLUDE_DIRECTORIES( "${CMAKE_CURRENT_SOURCE_DIR}/../../include" )
     TARGET_LINK_LIBRARIES( ${TESTBIN} PRIVATE CmdLine::CmdLine )
 
 ###############################################################################
