@@ -68,14 +68,14 @@ int CmdLine::AddOption( int Type, int First, const char *Name )
 
 int CmdLine::UseDefault( OptionIndex Option, bool Use, const char *Unit )
 {
-  if ( Data.count( Option.Index ) > 0 )
+  if ( Data.count( Option ) > 0 )
   {
-    if ( Data[ Option.Index ].Default.Type() != CMD_BOOL_T )
+    if ( Data[ Option ].Default.Type() != CMD_BOOL_T )
     {
-      Data[ Option.Index ].Unit.clear() ;
-      if ( Unit )  Data[ Option.Index ].Unit = Unit ;
-      Data[ Option.Index ].HasDefault = Use ;
-      Data[ Option.Index ].Required &= !Use ;
+      Data[ Option ].Unit.clear() ;
+      if ( Unit )  Data[ Option ].Unit = Unit ;
+      Data[ Option ].HasDefault = Use ;
+      Data[ Option ].Required &= !Use ;
       return 0 ;
     }
     return CMD_ILLEGAL_OPTION_TYPE ;
@@ -87,11 +87,11 @@ int CmdLine::UseDefault( OptionIndex Option, bool Use, const char *Unit )
 
 int CmdLine::EnforceOption( OptionIndex Option, bool Enforce )
 {
-  if ( Data.count( Option.Index ) > 0 )
+  if ( Data.count( Option ) > 0 )
   {
-    if ( Data[ Option.Index ].Default.Type() != CMD_BOOL_T )
+    if ( Data[ Option ].Default.Type() != CMD_BOOL_T )
     {
-      Data[ Option.Index ].Required = Enforce ;
+      Data[ Option ].Required = Enforce ;
       return 0 ;
     }
     return CMD_ILLEGAL_OPTION_TYPE ;
@@ -128,14 +128,14 @@ int CmdLine::EnforceOption( int Index, bool Enforce )
 
 int CmdLine::AddName( OptionIndex Option, const char *Name )
 {
-  if ( Option.Index > 0 )
+  if ( Option > 0 )
   {
-    if ( Data.count( Option.Index ) > 0 )
+    if ( Data.count( Option ) > 0 )
     {
       if ( Name )
-        Data[ Option.Index ].Name = Name ;
+        Data[ Option ].Name = Name ;
       else
-        Data[ Option.Index ].Name.clear() ;
+        Data[ Option ].Name.clear() ;
       return 0 ;
     }
     return CMD_UNDEFINED_OPTION ;
@@ -147,14 +147,14 @@ int CmdLine::AddName( OptionIndex Option, const char *Name )
 
 int CmdLine::AddHelp( OptionIndex Option, const char *Text )
 {
-  if ( Option.Index > 0 )
+  if ( Option > 0 )
   {
-    if ( Data.count( Option.Index ) > 0 )
+    if ( Data.count( Option ) > 0 )
     {
       if ( Text )
-        Data[ Option.Index ].Info = Text ;
+        Data[ Option ].Info = Text ;
       else
-        Data[ Option.Index ].Info.clear() ;
+        Data[ Option ].Info.clear() ;
       return 0 ;
     }
     return CMD_UNDEFINED_OPTION ;
@@ -166,24 +166,24 @@ int CmdLine::AddHelp( OptionIndex Option, const char *Text )
 
 int CmdLine::QueryOption( OptionValue &Result, OptionIndex Option )
 {
-  OptionCounter = (int) Arguments.count( Option.Index ) ;
+  OptionCounter = (int) Arguments.count( Option ) ;
   if ( OptionCounter > 0 )
   {
-    ActiveOption = Option.Index ;
+    ActiveOption = Option ;
     for ( const auto &a : Arguments )
     {
-      if ( a.first == Option.Index )
+      if ( a.first == Option )
       {
         Result = a.second ;
         return OptionCounter ;
       }
     }
   }
-  if ( Data.count( Option.Index ) )
+  if ( Data.count( Option ) )
   {
-    if ( Data[ Option.Index ].HasDefault )
+    if ( Data[ Option ].HasDefault )
     {
-      Result = Data[ Option.Index ].Default ;
+      Result = Data[ Option ].Default ;
       OptionCounter = 1 ;
     }
   }
@@ -483,7 +483,7 @@ int CmdLine::Insert( int Type, int Index, std::string &sp )
       return 0 ;
     }
     case CMD_STRING_T:
-      Arguments.insert( { Index, OptionValue( sp ) } ) ;
+      Arguments.insert( { Index, OptionValue( sp.c_str() ) } ) ;
       return 0 ;
     case CMD_CHAR_T:
       if ( sp.size() == 1 )

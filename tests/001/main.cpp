@@ -37,5 +37,7 @@ int main( int argc, const char *argv[] )
     n = Options -> NextOption( Result ) ;
   }
 
+  Options -> Discard() ;
+
   return 0 ;
 }

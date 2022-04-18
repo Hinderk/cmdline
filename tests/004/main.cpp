@@ -8,26 +8,65 @@
 
 
 
+
+struct Error {
+
+  int n ;
+  int m ;
+
+} ;
+
+
+
+std::ostream& operator<<( std::ostream &Out, const Error &e )
+{
+  Out << e.n << " -- " << e.m ;
+  return Out ;
+}
+
+
+
 int main( int argc, const char *argv[] )
 {
+  std::shared_ptr<OptionParser> Options( CreateOptionParser(argc,argv) ) ;
+  Error e { 1, 2 } ;
   try {
-    OptionValue OV( "Test successful!" ) ;
-    std::shared_ptr<OptionParser> Options( CreateOptionParser(argc,argv) ) ;
-    int state ;
+    OptionValue T0 ;
+    OptionValue E0( e ) ;
+    OptionValue F1( 18.4f ) ;
+    OptionValue U1( 10u ) ;
+    OptionValue I1( 128 ) ;
+    OptionValue B1( false ) ;
+    OptionValue S1( "Success!" ) ;
+
     OptionIndex Type[] = {
-      Options -> AddOption( 0.0f, "-f", "--float" ) ,
-      Options -> AddOption( 0u, "-u", "--unsigned" ) ,
-      Options -> AddOption( 0, "-i", "--integer" ) ,
-      Options -> AddOption( true, "-b", "--bool" ) ,
-      Options -> AddOption( "", "-s", "--string" ) ,
-      Options -> AddOption( OV, "-e", "--empty" )
+      Options -> AddOption( F1, "-f", "--float" ) ,
+      Options -> AddOption( U1, "-C", "--count" ) ,
+      Options -> AddOption( I1, "-i", "--index" ) ,
+      Options -> AddOption( B1, "-v", "--verbose" ) ,
+      Options -> AddOption( S1, "-N", "--name" ) ,
+      Options -> AddOption( E0, "-e", "--error" ) , 0
     } ;
 
-    state = Options -> Parse() ;
+    int state = Options -> Parse() ;
     if ( state )  return state ;
 
-    const char *Test = OV ;
+    const char *Test = S1 ;
     std::cout << "String output: " << Test << std::endl ;
+    T0 = "Success again!" ;
+
+    OptionValue Result ;
+
+    for ( OptionIndex i : Type )
+    {
+      std::cout << "Current type: " << i << "\n" ;
+      int n = Options -> QueryOption( Result, i ) ;
+      while ( n )
+      {
+        std::cout << "Option:  " << Result.GetString() << std::endl ;
+        n = Options -> NextOption( Result ) ;
+      }
+    }
 
   }
   catch ( std::bad_cast &e )

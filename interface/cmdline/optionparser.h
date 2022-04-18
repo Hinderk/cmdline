@@ -15,13 +15,15 @@ class CmdLine ;
 class OptionParser ;
 
 
-class OptionIndex {
+struct OptionIndex {
 
-  friend class OptionParser ;
-  friend class CmdLine ;
+    OptionIndex( int n ) : Index( n ) {}
 
-  OptionIndex( int n ) : Index( n ) {}
-  int Index ;
+    operator int( void ) const { return Index ; } 
+
+  private:
+
+    int Index ;
 
 } ;
 
