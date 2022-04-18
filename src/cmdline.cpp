@@ -29,7 +29,10 @@ CmdLine::CmdLine( int argc, const char *argv[] ) :
 
 OptionIndex CmdLine::AddOption( const OptionValue &Option          ,
                                 const char        *ShortOptionName ,
-                                const char        *LongOptionName  )
+                                const char        *LongOptionName  ,
+                                const char        *NameOfDefault   ,
+                                const char        *UnitOfDefault   ,
+                                bool               UseDefault      )
 {
   if ( TypeSupported( Option.Type() ) )
   {
@@ -38,12 +41,18 @@ OptionIndex CmdLine::AddOption( const OptionValue &Option          ,
     if ( LongOptionName )  Long[ LongOptionName ] = Index ;
     Data[ Index ].Required = false ;
     Data[ Index ].HasDefault = false ;
+    if ( Option.Type() != CMD_BOOL_T )
+      Data[ Index ].HasDefault = UseDefault ;
     Data[ Index ].Default = Option ;
     Data[ Index ].Info = "" ;
     Data[ Index ].Unit = "" ;
-    Data[ Index ].Name = InputType( Option.Type() ) ;
+    if ( UnitOfDefault )  Data[ Index ].Unit = UnitOfDefault ;
+    if ( NameOfDefault )
+      Data[ Index ].Name = NameOfDefault ;
+    else
+      Data[ Index ].Name = InputType( Option.Type() ) ;
     return OptionIndex( Index ) ;
-  }
+  } 
   return OptionIndex( -1 ) ;       // This option index is invalid!
 }
 
@@ -72,7 +81,6 @@ int CmdLine::UseDefault( OptionIndex Option, bool Use, const char *Unit )
   {
     if ( Data[ Option ].Default.Type() != CMD_BOOL_T )
     {
-      Data[ Option ].Unit.clear() ;
       if ( Unit )  Data[ Option ].Unit = Unit ;
       Data[ Option ].HasDefault = Use ;
       Data[ Option ].Required &= !Use ;
@@ -132,10 +140,13 @@ int CmdLine::AddName( OptionIndex Option, const char *Name )
   {
     if ( Data.count( Option ) > 0 )
     {
-      if ( Name )
+      if ( Name )  
         Data[ Option ].Name = Name ;
       else
-        Data[ Option ].Name.clear() ;
+      {
+        int Type = Data[ Option ].Default.Type() ;
+        Data[ Option ].Name = InputType( Type ) ;
+      }
       return 0 ;
     }
     return CMD_UNDEFINED_OPTION ;
@@ -151,10 +162,8 @@ int CmdLine::AddHelp( OptionIndex Option, const char *Text )
   {
     if ( Data.count( Option ) > 0 )
     {
-      if ( Text )
-        Data[ Option ].Info = Text ;
-      else
-        Data[ Option ].Info.clear() ;
+      Data[ Option ].Info.clear() ;
+      if ( Text )  Data[ Option ].Info = Text ;
       return 0 ;
     }
     return CMD_UNDEFINED_OPTION ;
@@ -379,6 +388,7 @@ bool CmdLine::TypeSupported( int TypeIndex ) const
     case   CMD_FLOAT96_T:
     case    CMD_STRING_T:
     case      CMD_CHAR_T:
+    case      CMD_BOOL_T:
       return true ;
     default: ;
   }

@@ -45,8 +45,12 @@ class OptionParser {
 
     virtual void Discard( void ) = 0 ;
 
-    virtual OptionIndex
-      AddOption( const OptionValue &, const char *, const char * = NULL ) = 0 ;
+    virtual OptionIndex AddOption( const OptionValue &DefaultValue   ,
+                                   const char *ShortOptionName       ,
+                                   const char *LongOptionName = NULL ,
+                                   const char *NameOfDefault = NULL  ,
+                                   const char *UnitOfDefault = NULL  ,
+                                   bool        UseDefault = false    ) = 0 ;
     virtual int AddOption( int, int, const char * = NULL ) = 0 ;
     virtual int EnforceOption( OptionIndex, bool = true ) = 0 ;
     virtual int EnforceOption( int, bool = true ) = 0 ;

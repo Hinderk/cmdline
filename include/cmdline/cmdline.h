@@ -33,7 +33,12 @@ class CmdLine : public OptionParser {
 
     void Discard( void )  { delete this ; }
 
-    OptionIndex AddOption( const OptionValue &, const char *, const char * ) ;
+    OptionIndex AddOption( const OptionValue &DefaultValue    ,
+                           const char        *ShortOptionName ,
+                           const char        *LongOptionName  ,
+                           const char        *NameOfDefault   ,
+                           const char        *UnitOfDefault   ,
+                           bool               UseDefault      ) ;
     int AddOption( int Type, int First, const char *Name ) ;
     int EnforceOption( OptionIndex Option, bool Enforce ) ;
     int EnforceOption( int LastIndex, bool Enforce ) ;
