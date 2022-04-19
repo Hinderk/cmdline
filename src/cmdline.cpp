@@ -2,7 +2,6 @@
 #include "cmdline/cmdline.h"
 
 #include <sstream>
-#include <cstring>
 
 
 
@@ -590,3 +589,112 @@ int CmdLine::Parse( void )
   }
   return State ;
 }
+
+
+
+int CmdLine::CloseBracket( char &c, const char *Expression ) const
+{
+  const int len = strlen( Expression ) ;
+  char Stack[ 16 ] ;
+  int sp = 0 ;
+  for ( int i = 0 ; i < len ; i++ )
+  {
+    if ( Expression[i] == '(' )  Stack[ sp ++ ] = ')' ; 
+    if ( Expression[i] == '[' )  Stack[ sp ++ ] = ']' ; 
+    if ( Expression[i] == '<' )  Stack[ sp ++ ] = '>' ; 
+    if ( Expression[i] == ')' && Stack[ -- sp ] != ')' )  return 0 ; 
+    if ( Expression[i] == ']' && Stack[ -- sp ] != ']' )  return 0 ; 
+    if ( Expression[i] == '>' && Stack[ -- sp ] != '>' )  return 0 ; 
+    if ( sp > 8 )  return 0 ;
+  }
+  c = sp ? Stack[ sp - 1 ] : ' ' ;
+  return sp ;
+}
+
+
+
+int CmdLine::Prettify( char *Out, char *In, size_t Length ) const
+{
+  const int Size = strlen( In ) ;
+  if ( 1 + Size < Length )
+  {
+    int MaxColumn = 0 ;
+    int state = QueryWidth( MaxColumn ) ;
+    if ( state )  return state ; 
+    memcpy( Out, In, Length ) ;
+    char c, *Cursor = strtok( Out, "[(<" ) ;
+    int LeftColumn = strlen( Out ) ;
+    memset( Out + LeftColumn, 0, Length - LeftColumn ) ;
+    int pos = LeftColumn ;
+    int column = LeftColumn ;
+    int option = 0 ;
+    Cursor = strtok( In + pos, ")>]" ) ;
+    char *Start = Out + pos ;
+    while( Cursor ) 
+    {
+      int delta = strlen( Cursor ) ;
+      if ( Cursor[ 0 ] == ' ' )
+      {
+        while ( CloseBracket( c, Start ) )
+        {
+          Out[ pos ++ ] = c ;
+          column ++ ;
+        } 
+        if ( column + 1 > MaxColumn && option > 0 )
+        {
+          const size_t len = strlen( Start ) ;
+          if ( pos + LeftColumn + 3 > Length )
+            return CMD_INSUFFICIENT_BUFFERSPACE ;
+          memmove( Start + LeftColumn, Start, len ) ;
+          memset( Start, ' ', LeftColumn ) ;
+          Start[ 0 ] = '\n' ;
+          pos += LeftColumn ;
+          column = LeftColumn + len ;
+        } 
+        Start = Out + pos ;
+        option ++ ;
+      }
+      if ( pos + delta + 3 > Length )  return CMD_INSUFFICIENT_BUFFERSPACE ;
+      column += delta + 1 ;
+      memcpy( Out + pos, Cursor, delta ) ;
+      pos += delta ;
+      if ( CloseBracket( c, Start ) )  Out[ pos ++ ] = c ;
+      Cursor = strtok( NULL, ")>]" ) ;
+    }
+    return 0 ;
+  }
+  return CMD_INSUFFICIENT_BUFFERSPACE ;
+}
+
+
+
+#ifdef _WIN32
+
+int CmdLine::QueryWidth( int &CurrentWidth ) const
+{
+  HANDLE hConsole = GetStdHandle( STD_OUTPUT_HANDLE ) ;
+  if ( hConsole != INVALID_HANDLE_VALUE )
+  {
+    CONSOLE_SCREEN_BUFFER_INFO Info ;
+    if ( GetConsoleScreenBufferInfo( hConsole, &Info ) )
+    {
+      CurrentWidth = Info.dwMaximumWindowSize.X ;
+      return 0 ;
+    }
+    return CMD_CONSOLE_QUERY_FAILED ;
+  }
+  return CMD_NO_CONSOLE_FOUND ;
+}
+
+#else      // _WIN32
+
+int CmdLine::QueryWidth( int &CurrentWidth ) const
+{
+  winsize W0 ;
+  if ( ioctl( STDOUT_FILENO, TIOCGWINSZ, &W0 ) < 0 )
+    return CMD_CONSOLE_QUERY_FAILED ;
+  CurrentWidth = W0.ws_col ;
+  return 0 ;
+}
+
+#endif     // _WIN32
