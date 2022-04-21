@@ -44,9 +44,11 @@ int main( int argc, const char *argv[] )
     Options -> EnforceOption( 9, true ) ;
 //  Options -> EnforceOption( 6, false ) ;
 
-    char Message[ 1024 ] ;
-    Options -> Usage( Message, 1024 ) ;
-    std::cout << Message << "\n" ;
+    char Message[ 1024 ], Buffer[ 1024 ] ;
+    Options -> Usage( Buffer, 1024 ) ;
+//    std::cout << Buffer << std::endl ;
+    Options -> Prettify( Message, Buffer, 1024 ) ;
+    std::cout << Message << std::endl ;
     return 0 ;
   }
 

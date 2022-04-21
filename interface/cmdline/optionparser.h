@@ -12,6 +12,7 @@
 #define CMD_BUFFER_SIZE_INSUFFICIENT 8050
 #define CMD_CONSOLE_QUERY_FAILED 8060
 #define CMD_NO_CONSOLE_FOUND 8070
+#define CMD_INSUFFICIENT_BUFFERSPACE 8080
 
 class CmdLine ;
 class OptionParser ;
@@ -65,6 +66,8 @@ class OptionParser {
 
     virtual int Help( char *Message, size_t Length ) const = 0 ;
     virtual int Usage( char *Message, size_t Length ) const = 0 ;
+
+    virtual int Prettify( char *Out, char *In, size_t Length ) const = 0 ;
 
     virtual void SetPreamble( const char *Text = NULL ) = 0 ;
     virtual void SetEpilogue( const char *Text = NULL ) = 0 ;
