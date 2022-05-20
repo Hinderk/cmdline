@@ -620,7 +620,7 @@ int CmdLine::Prettify( char *Out, char *In, size_t Length ) const
   {
     int MaxColumn = 0 ;
     int state = QueryWidth( MaxColumn ) ;
-    if ( state )  return state ; 
+    if ( state )  MaxColumn = 80 ; 
     memcpy( Out, In, Length ) ;
     char c, *Cursor = strtok( Out, "[(<" ) ;
     int LeftColumn = strlen( Out ) ;
