@@ -35,7 +35,11 @@ GENERATE_EXPORT_HEADER(
 # The following settings are used to build the library with some
 # native C++ compiler on a Windows box (e.g. VS2019):
 
-# ...
+IF( ${WIN32} )
+  TARGET_COMPILE_OPTIONS( ${LIBNAME} PRIVATE /MT )
+  TARGET_LINK_OPTIONS( ${LIBNAME} PRIVATE /INCREMENTAL:NO )
+  TARGET_LINK_OPTIONS( ${LIBNAME} PRIVATE /NODEFAULTLIB:MSVCRT )
+ENDIF( ${WIN32} )
 
 # The following settings apply to both Windows and Posix builds ...
 

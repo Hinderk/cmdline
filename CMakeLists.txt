@@ -68,6 +68,13 @@ ENDIF( PROVIDE_OPTIONS )
 
 IF( DEFINED CMDLINE_BUILD_SHARED_LIB )
   SET( BUILD_SHARED_LIBS "${CMDLINE_BUILD_SHARED_LIB}" )
+  SET( CMDLINE_MONOLITHIC_BUILD OFF )
+ELSE()
+  OPTION(
+    CMDLINE_MONOLITHIC_BUILD
+    "Create a monolithic build."
+    NO 
+  )
 ENDIF()
 
 # The following switch turns the automated unit tests on or off. To

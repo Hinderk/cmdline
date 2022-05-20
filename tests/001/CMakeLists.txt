@@ -56,11 +56,11 @@
 # of older installations of the Windows operating system the test driver is
 # built (/MT) and linked statically against the runtime system.
 #
-#  IF (WIN32)
-##    TARGET_COMPILE_OPTIONS( ${TEST_BIN} PRIVATE /MT )
-#    TARGET_LINK_OPTIONS( ${TEST_BIN} PRIVATE /INCREMENTAL:NO )
-#    TARGET_LINK_OPTIONS( ${TEST_BIN} PRIVATE /NODEFAULTLIB:MSVCRT )
-#  ENDIF (WIN32)
+  IF( ${WIN32} AND ${CMDLINE_MONOLITHIC_BUILD} )
+    TARGET_COMPILE_OPTIONS( ${TEST_BIN} PRIVATE /MT )
+    TARGET_LINK_OPTIONS( ${TEST_BIN} PRIVATE /INCREMENTAL:NO )
+    TARGET_LINK_OPTIONS( ${TEST_BIN} PRIVATE /NODEFAULTLIB:MSVCRT )
+  ENDIF()
 
   TARGET_LINK_LIBRARIES( ${TEST_BIN} ${LIBNAME} )
 #
@@ -74,13 +74,6 @@
   IF( UNIX AND ENABLE_CODE_PROFILING )
     SET_TARGET_PROPERTIES( ${TEST_BIN} PROPERTIES LINK_FLAGS -pg )
   ENDIF( UNIX AND ENABLE_CODE_PROFILING )
-#
-# Remove the comment in front of the following line if the unit test relies on
-# the unit testing framework "UnitTest++":
-#
-# TARGET_LINK_LIBRARIES( ${TEST_BIN} UnitTest++ )
-# TARGET_LINK_LIBRARIES( ${TEST_BIN} efwrap )
-# TARGET_LINK_LIBRARIES( ${TEST_BIN} efence )
 #
 # If information about test coverage is requested, the ENABLE_TEST_COVERAGE
 # variable must be defined. The coverage data is generated on Unix systems
