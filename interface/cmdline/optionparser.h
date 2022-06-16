@@ -10,18 +10,23 @@
 #define CMD_ILLEGAL_ARG_POSITION 8030
 #define CMD_ILLEGAL_OPTION_INDEX 8040
 #define CMD_BUFFER_SIZE_INSUFFICIENT 8050
+#define CMD_CONSOLE_QUERY_FAILED 8060
+#define CMD_NO_CONSOLE_FOUND 8070
+#define CMD_INSUFFICIENT_BUFFERSPACE 8080
 
 class CmdLine ;
 class OptionParser ;
 
 
-class OptionIndex {
+struct OptionIndex {
 
-  friend class OptionParser ;
-  friend class CmdLine ;
+    OptionIndex( int n ) : Index( n ) {}
 
-  OptionIndex( int n ) : Index( n ) {}
-  int Index ;
+    operator int( void ) const { return Index ; } 
+
+  private:
+
+    int Index ;
 
 } ;
 
@@ -43,8 +48,12 @@ class OptionParser {
 
     virtual void Discard( void ) = 0 ;
 
-    virtual OptionIndex
-      AddOption( const OptionValue &, const char *, const char * = NULL ) = 0 ;
+    virtual OptionIndex AddOption( const OptionValue &DefaultValue   ,
+                                   const char *ShortOptionName       ,
+                                   const char *LongOptionName = NULL ,
+                                   const char *NameOfDefault = NULL  ,
+                                   const char *UnitOfDefault = NULL  ,
+                                   bool        UseDefault = false    ) = 0 ;
     virtual int AddOption( int, int, const char * = NULL ) = 0 ;
     virtual int EnforceOption( OptionIndex, bool = true ) = 0 ;
     virtual int EnforceOption( int, bool = true ) = 0 ;
@@ -57,6 +66,8 @@ class OptionParser {
 
     virtual int Help( char *Message, size_t Length ) const = 0 ;
     virtual int Usage( char *Message, size_t Length ) const = 0 ;
+
+    virtual int Prettify( char *Out, char *In, size_t Length ) const = 0 ;
 
     virtual void SetPreamble( const char *Text = NULL ) = 0 ;
     virtual void SetEpilogue( const char *Text = NULL ) = 0 ;

@@ -2,7 +2,6 @@
 #include "cmdline/cmdline.h"
 
 #include <sstream>
-#include <cstring>
 
 
 
@@ -29,7 +28,10 @@ CmdLine::CmdLine( int argc, const char *argv[] ) :
 
 OptionIndex CmdLine::AddOption( const OptionValue &Option          ,
                                 const char        *ShortOptionName ,
-                                const char        *LongOptionName  )
+                                const char        *LongOptionName  ,
+                                const char        *NameOfDefault   ,
+                                const char        *UnitOfDefault   ,
+                                bool               UseDefault      )
 {
   if ( TypeSupported( Option.Type() ) )
   {
@@ -38,12 +40,18 @@ OptionIndex CmdLine::AddOption( const OptionValue &Option          ,
     if ( LongOptionName )  Long[ LongOptionName ] = Index ;
     Data[ Index ].Required = false ;
     Data[ Index ].HasDefault = false ;
+    if ( Option.Type() != CMD_BOOL_T )
+      Data[ Index ].HasDefault = UseDefault ;
     Data[ Index ].Default = Option ;
     Data[ Index ].Info = "" ;
     Data[ Index ].Unit = "" ;
-    Data[ Index ].Name = InputType( Option.Type() ) ;
+    if ( UnitOfDefault )  Data[ Index ].Unit = UnitOfDefault ;
+    if ( NameOfDefault )
+      Data[ Index ].Name = NameOfDefault ;
+    else
+      Data[ Index ].Name = InputType( Option.Type() ) ;
     return OptionIndex( Index ) ;
-  }
+  } 
   return OptionIndex( -1 ) ;       // This option index is invalid!
 }
 
@@ -68,14 +76,13 @@ int CmdLine::AddOption( int Type, int First, const char *Name )
 
 int CmdLine::UseDefault( OptionIndex Option, bool Use, const char *Unit )
 {
-  if ( Data.count( Option.Index ) > 0 )
+  if ( Data.count( Option ) > 0 )
   {
-    if ( Data[ Option.Index ].Default.Type() != CMD_BOOL_T )
+    if ( Data[ Option ].Default.Type() != CMD_BOOL_T )
     {
-      Data[ Option.Index ].Unit.clear() ;
-      if ( Unit )  Data[ Option.Index ].Unit = Unit ;
-      Data[ Option.Index ].HasDefault = Use ;
-      Data[ Option.Index ].Required &= !Use ;
+      if ( Unit )  Data[ Option ].Unit = Unit ;
+      Data[ Option ].HasDefault = Use ;
+      Data[ Option ].Required &= !Use ;
       return 0 ;
     }
     return CMD_ILLEGAL_OPTION_TYPE ;
@@ -87,11 +94,11 @@ int CmdLine::UseDefault( OptionIndex Option, bool Use, const char *Unit )
 
 int CmdLine::EnforceOption( OptionIndex Option, bool Enforce )
 {
-  if ( Data.count( Option.Index ) > 0 )
+  if ( Data.count( Option ) > 0 )
   {
-    if ( Data[ Option.Index ].Default.Type() != CMD_BOOL_T )
+    if ( Data[ Option ].Default.Type() != CMD_BOOL_T )
     {
-      Data[ Option.Index ].Required = Enforce ;
+      Data[ Option ].Required = Enforce ;
       return 0 ;
     }
     return CMD_ILLEGAL_OPTION_TYPE ;
@@ -128,14 +135,17 @@ int CmdLine::EnforceOption( int Index, bool Enforce )
 
 int CmdLine::AddName( OptionIndex Option, const char *Name )
 {
-  if ( Option.Index > 0 )
+  if ( Option > 0 )
   {
-    if ( Data.count( Option.Index ) > 0 )
+    if ( Data.count( Option ) > 0 )
     {
-      if ( Name )
-        Data[ Option.Index ].Name = Name ;
+      if ( Name )  
+        Data[ Option ].Name = Name ;
       else
-        Data[ Option.Index ].Name.clear() ;
+      {
+        int Type = Data[ Option ].Default.Type() ;
+        Data[ Option ].Name = InputType( Type ) ;
+      }
       return 0 ;
     }
     return CMD_UNDEFINED_OPTION ;
@@ -147,14 +157,12 @@ int CmdLine::AddName( OptionIndex Option, const char *Name )
 
 int CmdLine::AddHelp( OptionIndex Option, const char *Text )
 {
-  if ( Option.Index > 0 )
+  if ( Option > 0 )
   {
-    if ( Data.count( Option.Index ) > 0 )
+    if ( Data.count( Option ) > 0 )
     {
-      if ( Text )
-        Data[ Option.Index ].Info = Text ;
-      else
-        Data[ Option.Index ].Info.clear() ;
+      Data[ Option ].Info.clear() ;
+      if ( Text )  Data[ Option ].Info = Text ;
       return 0 ;
     }
     return CMD_UNDEFINED_OPTION ;
@@ -166,24 +174,24 @@ int CmdLine::AddHelp( OptionIndex Option, const char *Text )
 
 int CmdLine::QueryOption( OptionValue &Result, OptionIndex Option )
 {
-  OptionCounter = (int) Arguments.count( Option.Index ) ;
+  OptionCounter = (int) Arguments.count( Option ) ;
   if ( OptionCounter > 0 )
   {
-    ActiveOption = Option.Index ;
+    ActiveOption = Option ;
     for ( const auto &a : Arguments )
     {
-      if ( a.first == Option.Index )
+      if ( a.first == Option )
       {
         Result = a.second ;
         return OptionCounter ;
       }
     }
   }
-  if ( Data.count( Option.Index ) )
+  if ( Data.count( Option ) )
   {
-    if ( Data[ Option.Index ].HasDefault )
+    if ( Data[ Option ].HasDefault )
     {
-      Result = Data[ Option.Index ].Default ;
+      Result = Data[ Option ].Default ;
       OptionCounter = 1 ;
     }
   }
@@ -292,14 +300,14 @@ int CmdLine::Usage( char *Message, size_t Length ) const
     print = true ;
     if ( i > iold + 2 )
     {
-      snprintf( Buffer, 64, "_%i>", i - iold ) ;
-      Out += " <" + arg + "_1> ... <" ;
+      snprintf( Buffer, 64, "-%i>", i - iold ) ;
+      Out += " <" + arg + "-1> ... <" ;
       Out += arg + Buffer ;
     }
     else if ( i > iold + 1 )
     {
-      Out += " <" + arg + "_1>" ;
-      Out += " <" + arg + "_2>" ;
+      Out += " <" + arg + "-1>" ;
+      Out += " <" + arg + "-2>" ;
     }
     else if ( i > iold )
     {
@@ -310,20 +318,20 @@ int CmdLine::Usage( char *Message, size_t Length ) const
   }
   if ( iold + 1 < LastIndex )
   {
-    snprintf( Buffer, 64, "_%i>", 1 + LastIndex - iold ) ;
-    Out += " <" + arg + "_1> ... <" ;
+    snprintf( Buffer, 64, "-%i>", 1 + LastIndex - iold ) ;
+    Out += " <" + arg + "-1> ... <" ;
     Out += arg + Buffer ;
   }
   else if ( iold < LastIndex )
   {
-    Out += " <" + arg + "_1>" ;
-    Out += " <" + arg + "_2>" ;
+    Out += " <" + arg + "-1>" ;
+    Out += " <" + arg + "-2>" ;
   }
   else if ( iold == LastIndex )
     Out += " <" + arg + '>' ;
   else if ( print )
-    Out += " <" + arg + "_1> <" + arg + "_2> ..." ;
-  Buffer[ 0 ] = '\0' ;
+    Out += " <" + arg + "-1> <" + arg + "-2> ..." ;
+  Message[ 0 ] = '\0' ;
   if ( Out.size() < Length )
   {
     strncpy( Message, Out.c_str(), Length ) ;
@@ -379,6 +387,7 @@ bool CmdLine::TypeSupported( int TypeIndex ) const
     case   CMD_FLOAT96_T:
     case    CMD_STRING_T:
     case      CMD_CHAR_T:
+    case      CMD_BOOL_T:
       return true ;
     default: ;
   }
@@ -483,7 +492,7 @@ int CmdLine::Insert( int Type, int Index, std::string &sp )
       return 0 ;
     }
     case CMD_STRING_T:
-      Arguments.insert( { Index, OptionValue( sp ) } ) ;
+      Arguments.insert( { Index, OptionValue( sp.c_str() ) } ) ;
       return 0 ;
     case CMD_CHAR_T:
       if ( sp.size() == 1 )
@@ -580,3 +589,126 @@ int CmdLine::Parse( void )
   }
   return State ;
 }
+
+
+
+int CmdLine::CloseBracket( char &c, const char *Expression ) const
+{
+  const int len = strlen( Expression ) ;
+  char Stack[ 16 ] ;
+  int sp = 0 ;
+  for ( int i = 0 ; i < len ; i++ )
+  {
+    if ( Expression[i] == '(' )  Stack[ sp ++ ] = ')' ; 
+    if ( Expression[i] == '[' )  Stack[ sp ++ ] = ']' ; 
+    if ( Expression[i] == '<' )  Stack[ sp ++ ] = '>' ; 
+    if ( Expression[i] == ')' && Stack[ -- sp ] != ')' )  return 0 ; 
+    if ( Expression[i] == ']' && Stack[ -- sp ] != ']' )  return 0 ; 
+    if ( Expression[i] == '>' && Stack[ -- sp ] != '>' )  return 0 ; 
+    if ( sp > 8 )  return 0 ;
+  }
+  c = sp ? Stack[ sp - 1 ] : ' ' ;
+  return sp ;
+}
+
+
+
+int CmdLine::Prettify( char *Out, char *In, size_t Length ) const
+{
+  const int Size = strlen( In ) ;
+  if ( 1 + Size < Length )
+  {
+    int MaxColumn = 0 ;
+    int state = QueryWidth( MaxColumn ) ;
+    if ( state )  return state ; 
+    memcpy( Out, In, Length ) ;
+    char c, *Cursor = strtok( Out, "[(<" ) ;
+    int LeftColumn = strlen( Out ) ;
+    memset( Out + LeftColumn, 0, Length - LeftColumn ) ;
+    int pos = LeftColumn ;
+    int column = LeftColumn ;
+    int option = 0 ;
+    Cursor = strtok( In + pos, ")>]" ) ;
+    char *Start = Out + pos ;
+    while( Cursor ) 
+    {
+      int delta = strlen( Cursor ) ;
+      if ( Cursor[ 0 ] == ' ' )
+      {
+        while ( CloseBracket( c, Start ) )
+        {
+          Out[ pos ++ ] = c ;
+          column ++ ;
+        } 
+        if ( column + 1 > MaxColumn && option > 0 )
+        {
+          const size_t len = strlen( Start ) ;
+          if ( pos + LeftColumn + 3 > Length )
+            return CMD_INSUFFICIENT_BUFFERSPACE ;
+          memmove( Start + LeftColumn, Start, len ) ;
+          memset( Start, ' ', LeftColumn ) ;
+          Start[ 0 ] = '\n' ;
+          pos += LeftColumn ;
+          column = LeftColumn + len ;
+        } 
+        Start = Out + pos ;
+        option ++ ;
+      }
+      if ( pos + delta + 3 > Length )  return CMD_INSUFFICIENT_BUFFERSPACE ;
+      column += delta + 1 ;
+      memcpy( Out + pos, Cursor, delta ) ;
+      pos += delta ;
+      if ( CloseBracket( c, Start ) )  Out[ pos ++ ] = c ;
+      Cursor = strtok( NULL, ")>]" ) ;
+    }
+    while ( CloseBracket( c, Start ) )
+    {
+      Out[ pos ++ ] = c ;
+      column ++ ;
+    }
+    if ( column + 1 > MaxColumn && option > 0 )
+    {
+      const size_t len = strlen( Start ) ;
+      if ( pos + LeftColumn + 3 > Length )
+        return CMD_INSUFFICIENT_BUFFERSPACE ;
+      memmove( Start + LeftColumn, Start, len ) ;
+      memset( Start, ' ', LeftColumn ) ;
+      Start[ 0 ] = '\n' ;
+    }
+    return 0 ;
+  }
+  return CMD_INSUFFICIENT_BUFFERSPACE ;
+}
+
+
+
+#ifdef _WIN32
+
+int CmdLine::QueryWidth( int &CurrentWidth ) const
+{
+  HANDLE hConsole = GetStdHandle( STD_OUTPUT_HANDLE ) ;
+  if ( hConsole != INVALID_HANDLE_VALUE )
+  {
+    CONSOLE_SCREEN_BUFFER_INFO Info ;
+    if ( GetConsoleScreenBufferInfo( hConsole, &Info ) )
+    {
+      CurrentWidth = Info.dwMaximumWindowSize.X ;
+      return 0 ;
+    }
+    return CMD_CONSOLE_QUERY_FAILED ;
+  }
+  return CMD_NO_CONSOLE_FOUND ;
+}
+
+#else      // _WIN32
+
+int CmdLine::QueryWidth( int &CurrentWidth ) const
+{
+  winsize W0 ;
+  if ( ioctl( STDOUT_FILENO, TIOCGWINSZ, &W0 ) < 0 )
+    return CMD_CONSOLE_QUERY_FAILED ;
+  CurrentWidth = W0.ws_col ;
+  return 0 ;
+}
+
+#endif     // _WIN32

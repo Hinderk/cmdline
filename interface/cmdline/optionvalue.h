@@ -15,14 +15,12 @@ class CMDLINE_EXPORT OptionValue : public CmdOption {
 
     OptionValue( const char Text[] )
     {
-      const DataItem<const char *> Item( Text ) ;
-      Handle = Create( CMD_STRING_T, &Item, this ) ;
+      Handle = new __CMD::DataItem<const char *>( Text ) ;
     }
 
     template < typename T > OptionValue( const T &val )
     {
-      const DataItem<T> Item( val ) ;
-      Handle = Create( __CMD::TypeIndex<T>::value, &Item, this ) ;
+      Handle = new __CMD::DataItem<T>( val ) ;
     }
 
     OptionValue( const OptionValue &OV ) ;
@@ -30,13 +28,6 @@ class CMDLINE_EXPORT OptionValue : public CmdOption {
    ~OptionValue( void ) ;
 
     OptionValue& operator=( const OptionValue &OV ) ;
-
-    std::string GetString( void ) const ;
-
-  private:
-
-    CMDLINE_NO_EXPORT void Discard( const DataHandle * ) ;
-    CMDLINE_NO_EXPORT DataHandle* Copy( int, const DataHandle * ) ;
 
 } ;
 

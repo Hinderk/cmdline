@@ -3,12 +3,13 @@
 #define __CMD_CMDOPTION_H
 
 #include <cstdint>
+#include <sstream>
+#include <cstring>
 #include <cstddef>
 #include <typeinfo>
 
 
 #define __ID(T,N)  TypeIndex<T> { static constexpr int value = N ; }
-#define __TD(N,T) TypeDefinition< N > { typedef T Type ; }
 
 
 #define     CMD_UNDEFINED_T   0x00
@@ -53,22 +54,78 @@ namespace __CMD {
   template<> struct __ID( uint8_t, CMD_UINT8_T ) ;
   template<> struct __ID( const char *, CMD_STRING_T ) ;
 
-  template < int n > struct TypeDefinition { typedef void Type ; } ;
 
-  template<> struct __TD( CMD_INT16_T, int16_t ) ;
-  template<> struct __TD( CMD_INT32_T, int32_t ) ;
-  template<> struct __TD( CMD_INT64_T, int64_t ) ;
-  template<> struct __TD( CMD_FLOAT32_T, float ) ;
-  template<> struct __TD( CMD_FLOAT64_T, double ) ;
-  template<> struct __TD( CMD_FLOAT96_T, long double ) ;
-  template<> struct __TD( CMD_UINT16_T, uint16_t ) ;
-  template<> struct __TD( CMD_UINT32_T, uint32_t ) ;
-  template<> struct __TD( CMD_UINT64_T, uint64_t ) ;
-  template<> struct __TD( CMD_BOOL_T, bool ) ;
-  template<> struct __TD( CMD_CHAR_T, char ) ;
-  template<> struct __TD( CMD_INT8_T, int8_t ) ;
-  template<> struct __TD( CMD_UINT8_T, uint8_t ) ;
-  template<> struct __TD( CMD_STRING_T, const char * ) ;
+  struct DataHandle {
+
+    virtual ~DataHandle( void ) {} ;
+
+    virtual void Discard( void ) = 0 ;
+    virtual DataHandle *Copy( void ) const = 0 ;
+    virtual int Type( void ) const = 0 ;
+    virtual std::string GetString( void ) const = 0 ;
+
+  } ;
+
+
+  template < typename T >
+  struct DataItem : public DataHandle {
+
+    DataItem( const T &val ) : Item( val ) {}
+
+    void Discard( void )  { delete this ; }
+
+    DataHandle* Copy( void ) const
+    {
+      return new DataItem<T>( Item ) ;
+    }
+
+    int Type( void ) const
+    {
+      return __CMD::TypeIndex<T>::value ;
+    }
+
+    std::string GetString( void ) const
+    {
+      std::stringstream out ;
+      out << Item ;
+      return out.str() ;
+    }
+
+    const T Item ;
+
+  } ; 
+
+
+  template<>
+  struct DataItem<const char *> : public DataHandle {
+
+    DataItem( const char *String )
+    {
+      Item = String ? strdup( String ) : NULL ;
+    }
+
+    void Discard( void )
+    { 
+      if ( Item )  free( (void*) Item ) ;
+      delete this ;
+    }
+
+    DataHandle *Copy( void ) const
+    {
+      return new DataItem<const char *>( Item ) ;
+    }
+
+    int Type( void ) const { return CMD_STRING_T ; }
+
+    std::string GetString( void ) const
+    {
+      return std::string( Item ) ;
+    }
+
+    const char *Item ;
+
+  } ;
+
 
 }  // End of namespace __CMD
 
@@ -76,18 +133,7 @@ namespace __CMD {
 
 class CmdOption {
 
-    template < int Index >
-    using DataType = typename __CMD::TypeDefinition< Index >::Type ;
-
   public:
-
-    struct DataHandle {
-
-      virtual ~DataHandle( void ) {} ;
-
-      virtual int Type( void ) const  = 0 ;
-
-    } ;
 
     virtual ~CmdOption( void ) {}
 
@@ -96,11 +142,16 @@ class CmdOption {
       return Handle ? Handle -> Type() : CMD_UNDEFINED_T ;
     }
 
+    std::string GetString( void ) const
+    {
+      return Handle ? Handle -> GetString() : "" ;
+    }
+
     template < typename T > operator T( void ) const
     {
-      if ( this -> Type() == __CMD::TypeIndex<T>::value )
+      if ( Type() == __CMD::TypeIndex<T>::value )
       {
-        return static_cast< DataItem<T>* >( Handle ) -> Item ;
+        return static_cast< __CMD::DataItem<T>* >( Handle ) -> Item ;
       }
       throw std::bad_cast() ;
     }
@@ -109,49 +160,10 @@ class CmdOption {
 
     CmdOption( void ) : Handle( NULL ) {}
 
-    template < typename T >
-    DataHandle* CopyItem( const DataHandle *In )
-    {
-      return new DataItem<T>(static_cast<const DataItem<T>*>(In)->Item) ;
-    }
-
-    template < int Index >
-    DataHandle* CreateCopy( const DataHandle *Input )
-    {
-      return CopyItem< DataType<Index> > ( Input ) ;
-    }
-
-    template < typename T >
-    struct DataItem : public DataHandle {
-
-      DataItem( const T &val ) : Item( val ) {}
-
-      virtual int Type( void ) const
-      {
-        return __CMD::TypeIndex<T>::value ;
-      }
-
-      const T Item ;
-
-    } ;
-
-    void Destroy( CmdOption *COP ) { COP -> Discard( Handle ) ; }
-
-    DataHandle* Create( int Type, const DataHandle *Data, CmdOption *COP )
-    {
-      return COP -> Copy( Type, Data ) ;
-    }
-
-    virtual void Discard( const DataHandle * ) = 0 ;
-    virtual DataHandle* Copy( int, const DataHandle * ) = 0 ;
-
-  protected:
-
-    DataHandle *Handle ;
+    __CMD::DataHandle *Handle ;
 
 } ;
 
 #undef __ID
-#undef __TD
 
 #endif     // __CMD_CMDOPTION_H

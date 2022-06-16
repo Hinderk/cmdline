@@ -5,6 +5,14 @@
 #include "cmdline/optionparser.h"
 #include "cmdline/optionvalue.h"
 
+#ifdef _WIN32
+  #include <Windows.h>
+#else
+  #include <unistd.h>
+  #include <stdio.h>
+  #include <sys/ioctl.h>
+#endif
+
 #include <cstring>
 #include <set>
 #include <map>
@@ -33,7 +41,12 @@ class CmdLine : public OptionParser {
 
     void Discard( void )  { delete this ; }
 
-    OptionIndex AddOption( const OptionValue &, const char *, const char * ) ;
+    OptionIndex AddOption( const OptionValue &DefaultValue    ,
+                           const char        *ShortOptionName ,
+                           const char        *LongOptionName  ,
+                           const char        *NameOfDefault   ,
+                           const char        *UnitOfDefault   ,
+                           bool               UseDefault      ) ;
     int AddOption( int Type, int First, const char *Name ) ;
     int EnforceOption( OptionIndex Option, bool Enforce ) ;
     int EnforceOption( int LastIndex, bool Enforce ) ;
@@ -47,14 +60,19 @@ class CmdLine : public OptionParser {
     int Help( char *Message, size_t Length ) const ;
     int Usage( char *Message, size_t Length ) const ;
 
+    int Prettify( char *Out, char *In, size_t Length ) const ;
+
     void SetPreamble( const char *Text ) ;
     void SetEpilogue( const char *Text ) ;
 
   private:
 
     int Insert( int TypeIndex, int Index, std::string &sp ) ;
+    int QueryWidth( int &Width ) const ;
+    int CloseBracket( char &c, const char *Expression ) const ;
     const char *InputType( int TypeIndex ) const ;
     bool TypeSupported( int TypeIndex ) const ;
+
 
     std::string                             Command ;
     std::vector<std::string>                CommandLine ;
