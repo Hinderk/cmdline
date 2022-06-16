@@ -35,23 +35,28 @@ OptionIndex CmdLine::AddOption( const OptionValue &Option          ,
 {
   if ( TypeSupported( Option.Type() ) )
   {
-    int &Index = Short[ ShortOptionName ] ;
-    Index = Index ? Index : ++ NewOption ;
-    if ( LongOptionName )  Long[ LongOptionName ] = Index ;
-    Data[ Index ].Required = false ;
-    Data[ Index ].HasDefault = false ;
-    if ( Option.Type() != CMD_BOOL_T )
-      Data[ Index ].HasDefault = UseDefault ;
-    Data[ Index ].Default = Option ;
-    Data[ Index ].Info = "" ;
-    Data[ Index ].Unit = "" ;
-    if ( UnitOfDefault )  Data[ Index ].Unit = UnitOfDefault ;
-    if ( NameOfDefault )
-      Data[ Index ].Name = NameOfDefault ;
-    else
-      Data[ Index ].Name = InputType( Option.Type() ) ;
-    return OptionIndex( Index ) ;
-  } 
+    if ( ShortOptionName || LongOptionName )
+    {
+      int &Index = ShortOptionName ?
+                   Short[ ShortOptionName ] : Long[ LongOptionName ];
+      Index = Index ? Index : ++ NewOption ;
+      if ( LongOptionName )  Long[ LongOptionName ] = Index ;
+      if ( ShortOptionName )  Short[ ShortOptionName ] = Index ;
+      Data[ Index ].Required = false ;
+      Data[ Index ].HasDefault = false ;
+      if ( Option.Type() != CMD_BOOL_T )
+        Data[ Index ].HasDefault = UseDefault ;
+      Data[ Index ].Default = Option ;
+      Data[ Index ].Info = "" ;
+      Data[ Index ].Unit = "" ;
+      if ( UnitOfDefault )  Data[ Index ].Unit = UnitOfDefault ;
+      if ( NameOfDefault )
+        Data[ Index ].Name = NameOfDefault ;
+      else
+        Data[ Index ].Name = InputType( Option.Type() ) ;
+      return OptionIndex( Index ) ;
+    }
+  }
   return OptionIndex( -1 ) ;       // This option index is invalid!
 }
 
