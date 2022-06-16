@@ -300,14 +300,14 @@ int CmdLine::Usage( char *Message, size_t Length ) const
     print = true ;
     if ( i > iold + 2 )
     {
-      snprintf( Buffer, 64, "_%i>", i - iold ) ;
-      Out += " <" + arg + "_1> ... <" ;
+      snprintf( Buffer, 64, "-%i>", i - iold ) ;
+      Out += " <" + arg + "-1> ... <" ;
       Out += arg + Buffer ;
     }
     else if ( i > iold + 1 )
     {
-      Out += " <" + arg + "_1>" ;
-      Out += " <" + arg + "_2>" ;
+      Out += " <" + arg + "-1>" ;
+      Out += " <" + arg + "-2>" ;
     }
     else if ( i > iold )
     {
@@ -318,20 +318,20 @@ int CmdLine::Usage( char *Message, size_t Length ) const
   }
   if ( iold + 1 < LastIndex )
   {
-    snprintf( Buffer, 64, "_%i>", 1 + LastIndex - iold ) ;
-    Out += " <" + arg + "_1> ... <" ;
+    snprintf( Buffer, 64, "-%i>", 1 + LastIndex - iold ) ;
+    Out += " <" + arg + "-1> ... <" ;
     Out += arg + Buffer ;
   }
   else if ( iold < LastIndex )
   {
-    Out += " <" + arg + "_1>" ;
-    Out += " <" + arg + "_2>" ;
+    Out += " <" + arg + "-1>" ;
+    Out += " <" + arg + "-2>" ;
   }
   else if ( iold == LastIndex )
     Out += " <" + arg + '>' ;
   else if ( print )
-    Out += " <" + arg + "_1> <" + arg + "_2> ..." ;
-  Buffer[ 0 ] = '\0' ;
+    Out += " <" + arg + "-1> <" + arg + "-2> ..." ;
+  Message[ 0 ] = '\0' ;
   if ( Out.size() < Length )
   {
     strncpy( Message, Out.c_str(), Length ) ;
@@ -660,6 +660,20 @@ int CmdLine::Prettify( char *Out, char *In, size_t Length ) const
       pos += delta ;
       if ( CloseBracket( c, Start ) )  Out[ pos ++ ] = c ;
       Cursor = strtok( NULL, ")>]" ) ;
+    }
+    while ( CloseBracket( c, Start ) )
+    {
+      Out[ pos ++ ] = c ;
+      column ++ ;
+    }
+    if ( column + 1 > MaxColumn && option > 0 )
+    {
+      const size_t len = strlen( Start ) ;
+      if ( pos + LeftColumn + 3 > Length )
+        return CMD_INSUFFICIENT_BUFFERSPACE ;
+      memmove( Start + LeftColumn, Start, len ) ;
+      memset( Start, ' ', LeftColumn ) ;
+      Start[ 0 ] = '\n' ;
     }
     return 0 ;
   }
