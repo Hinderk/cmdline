@@ -35,23 +35,28 @@ OptionIndex CmdLine::AddOption( const OptionValue &Option          ,
 {
   if ( TypeSupported( Option.Type() ) )
   {
-    int &Index = Short[ ShortOptionName ] ;
-    Index = Index ? Index : ++ NewOption ;
-    if ( LongOptionName )  Long[ LongOptionName ] = Index ;
-    Data[ Index ].Required = false ;
-    Data[ Index ].HasDefault = false ;
-    if ( Option.Type() != CMD_BOOL_T )
-      Data[ Index ].HasDefault = UseDefault ;
-    Data[ Index ].Default = Option ;
-    Data[ Index ].Info = "" ;
-    Data[ Index ].Unit = "" ;
-    if ( UnitOfDefault )  Data[ Index ].Unit = UnitOfDefault ;
-    if ( NameOfDefault )
-      Data[ Index ].Name = NameOfDefault ;
-    else
-      Data[ Index ].Name = InputType( Option.Type() ) ;
-    return OptionIndex( Index ) ;
-  } 
+    if ( ShortOptionName || LongOptionName )
+    {
+      int &Index = ShortOptionName ?
+                   Short[ ShortOptionName ] : Long[ LongOptionName ];
+      Index = Index ? Index : ++ NewOption ;
+      if ( LongOptionName )  Long[ LongOptionName ] = Index ;
+      if ( ShortOptionName )  Short[ ShortOptionName ] = Index ;
+      Data[ Index ].Required = false ;
+      Data[ Index ].HasDefault = false ;
+      if ( Option.Type() != CMD_BOOL_T )
+        Data[ Index ].HasDefault = UseDefault ;
+      Data[ Index ].Default = Option ;
+      Data[ Index ].Info = "" ;
+      Data[ Index ].Unit = "" ;
+      if ( UnitOfDefault )  Data[ Index ].Unit = UnitOfDefault ;
+      if ( NameOfDefault )
+        Data[ Index ].Name = NameOfDefault ;
+      else
+        Data[ Index ].Name = InputType( Option.Type() ) ;
+      return OptionIndex( Index ) ;
+    }
+  }
   return OptionIndex( -1 ) ;       // This option index is invalid!
 }
 
@@ -300,14 +305,14 @@ int CmdLine::Usage( char *Message, size_t Length ) const
     print = true ;
     if ( i > iold + 2 )
     {
-      snprintf( Buffer, 64, "_%i>", i - iold ) ;
-      Out += " <" + arg + "_1> ... <" ;
+      snprintf( Buffer, 64, "-%i>", i - iold ) ;
+      Out += " <" + arg + "-1> ... <" ;
       Out += arg + Buffer ;
     }
     else if ( i > iold + 1 )
     {
-      Out += " <" + arg + "_1>" ;
-      Out += " <" + arg + "_2>" ;
+      Out += " <" + arg + "-1>" ;
+      Out += " <" + arg + "-2>" ;
     }
     else if ( i > iold )
     {
@@ -318,20 +323,20 @@ int CmdLine::Usage( char *Message, size_t Length ) const
   }
   if ( iold + 1 < LastIndex )
   {
-    snprintf( Buffer, 64, "_%i>", 1 + LastIndex - iold ) ;
-    Out += " <" + arg + "_1> ... <" ;
+    snprintf( Buffer, 64, "-%i>", 1 + LastIndex - iold ) ;
+    Out += " <" + arg + "-1> ... <" ;
     Out += arg + Buffer ;
   }
   else if ( iold < LastIndex )
   {
-    Out += " <" + arg + "_1>" ;
-    Out += " <" + arg + "_2>" ;
+    Out += " <" + arg + "-1>" ;
+    Out += " <" + arg + "-2>" ;
   }
   else if ( iold == LastIndex )
     Out += " <" + arg + '>' ;
   else if ( print )
-    Out += " <" + arg + "_1> <" + arg + "_2> ..." ;
-  Buffer[ 0 ] = '\0' ;
+    Out += " <" + arg + "-1> <" + arg + "-2> ..." ;
+  Message[ 0 ] = '\0' ;
   if ( Out.size() < Length )
   {
     strncpy( Message, Out.c_str(), Length ) ;
@@ -619,8 +624,7 @@ int CmdLine::Prettify( char *Out, char *In, size_t Length ) const
   if ( 1 + Size < Length )
   {
     int MaxColumn = 0 ;
-    int state = QueryWidth( MaxColumn ) ;
-    if ( state )  MaxColumn = 80 ; 
+    if ( QueryWidth( MaxColumn ) )  MaxColumn = 80 ; 
     memcpy( Out, In, Length ) ;
     char c, *Cursor = strtok( Out, "[(<" ) ;
     int LeftColumn = strlen( Out ) ;
@@ -660,6 +664,20 @@ int CmdLine::Prettify( char *Out, char *In, size_t Length ) const
       pos += delta ;
       if ( CloseBracket( c, Start ) )  Out[ pos ++ ] = c ;
       Cursor = strtok( NULL, ")>]" ) ;
+    }
+    while ( CloseBracket( c, Start ) )
+    {
+      Out[ pos ++ ] = c ;
+      column ++ ;
+    }
+    if ( column + 1 > MaxColumn && option > 0 )
+    {
+      const size_t len = strlen( Start ) ;
+      if ( pos + LeftColumn + 3 > Length )
+        return CMD_INSUFFICIENT_BUFFERSPACE ;
+      memmove( Start + LeftColumn, Start, len ) ;
+      memset( Start, ' ', LeftColumn ) ;
+      Start[ 0 ] = '\n' ;
     }
     return 0 ;
   }
