@@ -56,12 +56,12 @@
 # of older installations of the Windows operating system the test driver is
 # built (/MT) and linked statically against the runtime system.
 #
-  IF( ${WIN32} AND ${CMDLINE_MONOLITHIC_BUILD} )
+  IF( WIN32 AND CMDLINE_MONOLITHIC_BUILD )
     TARGET_COMPILE_OPTIONS( ${TEST_BIN} PRIVATE /MT )
     TARGET_LINK_OPTIONS( ${TEST_BIN} PRIVATE /INCREMENTAL:NO )
     TARGET_LINK_OPTIONS( ${TEST_BIN} PRIVATE /NODEFAULTLIB:MSVCRT )
-  ENDIF()
-
+  ENDIF( WIN32 AND CMDLINE_MONOLITHIC_BUILD )
+#
   TARGET_LINK_LIBRARIES( ${TEST_BIN} ${LIBNAME} )
 #
 ###############################################################################
