@@ -22,7 +22,7 @@ struct OptionIndex {
 
     OptionIndex( int n ) : Index( n ) {}
 
-    operator int( void ) const { return Index ; } 
+    operator int( void ) const { return Index ; }
 
   private:
 
