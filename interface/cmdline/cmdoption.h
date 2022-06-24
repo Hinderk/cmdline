@@ -93,7 +93,7 @@ namespace __CMD {
 
     const T Item ;
 
-  } ; 
+  } ;
 
 
   template<>
@@ -105,7 +105,7 @@ namespace __CMD {
     }
 
     void Discard( void )
-    { 
+    {
       if ( Item )  free( (void*) Item ) ;
       delete this ;
     }
