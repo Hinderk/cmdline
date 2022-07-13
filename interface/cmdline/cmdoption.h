@@ -62,6 +62,7 @@ namespace __CMD {
     virtual void Discard( void ) = 0 ;
     virtual DataHandle *Copy( void ) const = 0 ;
     virtual int Type( void ) const = 0 ;
+    virtual const char* c_str( void ) const = 0 ;
     virtual std::string GetString( void ) const = 0 ;
 
   } ;
@@ -89,6 +90,11 @@ namespace __CMD {
       std::stringstream out ;
       out << Item ;
       return out.str() ;
+    }
+
+    const char* c_str( void ) const
+    {
+      return GetString().c_str() ;
     }
 
     const T Item ;
@@ -122,6 +128,11 @@ namespace __CMD {
       return std::string( Item ) ;
     }
 
+    const char* c_str( void ) const
+    {
+      return Item ;
+    }
+
     const char *Item ;
 
   } ;
@@ -140,6 +151,12 @@ class CmdOption {
     int Type( void ) const
     {
       return Handle ? Handle -> Type() : CMD_UNDEFINED_T ;
+    }
+
+    const char* c_str( void ) const
+    {
+      constexpr static const char empty[] = "" ;
+      return Handle ? Handle -> c_str() : empty ;
     }
 
     std::string GetString( void ) const
