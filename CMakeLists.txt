@@ -23,12 +23,12 @@ ENDIF()
 SET( SO_VERSION "1" )
 SET( MINOR_VERSION "0.0" )
 
-# Detect if the project is built by itself of as one part of some 
+# Detect if the project is built by itself of as one part of some
 # larger project. In the former case a number of options may be
 # used to modify the build procedure ...
 
-STRING( COMPARE EQUAL 
-  "${CMAKE_SOURCE_DIR}" 
+STRING( COMPARE EQUAL
+  "${CMAKE_SOURCE_DIR}"
   "${CMAKE_CURRENT_SOURCE_DIR}"
   PROVIDE_OPTIONS
 )
@@ -59,7 +59,7 @@ IF ( PROVIDE_OPTIONS )
   OPTION(
     CMDLINE_BUILD_SHARED_LIB
     "Create a shared library (dll)."
-    YES 
+    YES
   )
 ENDIF( PROVIDE_OPTIONS )
 
@@ -73,7 +73,7 @@ ELSE()
   OPTION(
     CMDLINE_MONOLITHIC_BUILD
     "Create a monolithic build."
-    NO 
+    NO
   )
 ENDIF()
 
@@ -87,13 +87,13 @@ ENABLE_TESTING()
 ADD_SUBDIRECTORY( "src" )
 ADD_SUBDIRECTORY( "tests" )
 
-# Provide an installer unless the project is built as some part of a 
+# Provide an installer unless the project is built as some part of a
 # larger project which has installation procedures of its own to deal
 # with this library - should that prove necessary at all.
 
-OPTION( 
-  CMDLINE_INCLUDE_PACKAGING 
-  "Provide an installer for the library" 
+OPTION(
+  CMDLINE_INCLUDE_PACKAGING
+  "Provide an installer for the library"
   "${PROVIDE_OPTIONS}"
 )
 

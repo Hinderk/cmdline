@@ -22,12 +22,12 @@ SET_TARGET_PROPERTIES( ${LIBNAME} PROPERTIES RELWITHDEBINFO_POSTFIX "d" )
 
 INCLUDE( GenerateExportHeader )
 
-GENERATE_EXPORT_HEADER( 
-  ${LIBNAME} 
+GENERATE_EXPORT_HEADER(
+  ${LIBNAME}
   EXPORT_FILE_NAME "include/cmdline/cmdexport.h"
 )
 
-# The following compiler switches are used to configure the build 
+# The following compiler switches are used to configure the build
 # process on all Unix systems which use GNU development tools.
 
 # ...
@@ -46,7 +46,7 @@ ENDIF( ${WIN32} )
 TARGET_COMPILE_FEATURES( ${LIBNAME} PUBLIC cxx_std_11 )
 
 
-TARGET_INCLUDE_DIRECTORIES( 
+TARGET_INCLUDE_DIRECTORIES(
   ${LIBNAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../interface>
@@ -58,6 +58,6 @@ TARGET_INCLUDE_DIRECTORIES(
 
 TARGET_COMPILE_DEFINITIONS(
   ${LIBNAME}
-  PUBLIC 
+  PUBLIC
     $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:${LIBNAME}_STATIC_DEFINE>
 )
