@@ -1,5 +1,5 @@
 
-# General settings applicable to all CPack generators follow: 
+# General settings applicable to all CPack generators follow:
 
 IF ( CMDLINE_RELEASE_BUILD )
   SET( CPACK_STRIP_FILES ON )
@@ -7,12 +7,12 @@ ELSE()
   SET( CPACK_STRIP_FILES OFF )
 ENDIF()
 
-SET( CPACK_PACKAGE_DESCRIPTION_SUMMARY 
+SET( CPACK_PACKAGE_DESCRIPTION_SUMMARY
      "A simple, portable command line parser written in C++11." )
 
 SET( CPACK_PACKAGE_VENDOR "Hinderk Buss" )
 SET( CPACK_PACKAGE_CONTACT "Hinderk Buss" )
- 
+
 SET( CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/INFO.md" )
 SET( CPACK_PACKAGE_LICENSE_FILE "${CMAKE_SOURCE_DIR}/LICENSE" )
 
