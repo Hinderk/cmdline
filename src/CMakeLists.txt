@@ -35,11 +35,11 @@ GENERATE_EXPORT_HEADER(
 # The following settings are used to build a static library with
 # some native C++ compiler on a Windows box (e.g. VS2019):
 
-IF( ${WIN32} AND ${CMDLINE_MONOLITHIC_BUILD} )
+IF( WIN32 AND CMDLINE_MONOLITHIC_BUILD )
   TARGET_COMPILE_OPTIONS( ${LIBNAME} PRIVATE /MT )
   TARGET_LINK_OPTIONS( ${LIBNAME} PRIVATE /INCREMENTAL:NO )
   TARGET_LINK_OPTIONS( ${LIBNAME} PRIVATE /NODEFAULTLIB:MSVCRT )
-ENDIF( ${WIN32} AND ${CMDLINE_MONOLITHIC_BUILD} )
+ENDIF( WIN32 AND CMDLINE_MONOLITHIC_BUILD )
 
 # The following settings apply to both Windows and Posix builds ...
 
