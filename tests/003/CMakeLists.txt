@@ -64,6 +64,19 @@
 #
   TARGET_LINK_LIBRARIES( ${TEST_BIN} ${LIBNAME} )
 #
+# If the target platform is MS Windows the test driver needs to find & load
+# the command line library. To this end the library is copied into CMakes's
+# current binary directory.
+#
+  IF( WIN32 AND CMDLINE_BUILD_SHARED_LIB )
+    ADD_CUSTOM_COMMAND(
+    TARGET ${TEST_BIN}
+      COMMAND ${CMAKE_COMMAND} -E copy
+        $<TARGET_FILE:${LIBNAME}>
+        ${CMAKE_CURRENT_BINARY_DIR}
+    )
+  ENDIF( WIN32 AND CMDLINE_BUILD_SHARED_LIB )
+#
 ###############################################################################
 #
 # If profiling information is required, the ENABLE_CODE_PROFILING variable

@@ -7,14 +7,6 @@
 #
 ###############################################################################
 #
-# The directories below contain additional header files which be necessary
-# to build the unit test. However, relying on other projects is discouraged,
-# as each unit test should be as self-contained as possible.
-#
-##  INCLUDE_DIRECTORIES( $ENV{HOME}/include  )
-#
-###############################################################################
-#
 # The following code is completely generic and may be recycled for all unit
 # test in the project. The test setup is performed in the module "TestSetup"
 # which is supposed to reside in the current directory. The CMake module will
@@ -64,6 +56,19 @@
 #
   TARGET_LINK_LIBRARIES( ${TEST_BIN} ${LIBNAME} )
 #
+# If the target platform is MS Windows the test driver needs to find & load
+# the command line library. To this end the library is copied into CMakes's
+# current binary directory.
+#
+  IF( WIN32 AND CMDLINE_BUILD_SHARED_LIB )
+    ADD_CUSTOM_COMMAND(
+    TARGET ${TEST_BIN}
+      COMMAND ${CMAKE_COMMAND} -E copy
+        $<TARGET_FILE:${LIBNAME}>
+        ${CMAKE_CURRENT_BINARY_DIR}
+    )
+  ENDIF( WIN32 AND CMDLINE_BUILD_SHARED_LIB )
+#
 ###############################################################################
 #
 # If profiling information is required, the ENABLE_CODE_PROFILING variable
@@ -74,13 +79,6 @@
   IF( UNIX AND ENABLE_CODE_PROFILING )
     SET_TARGET_PROPERTIES( ${TEST_BIN} PROPERTIES LINK_FLAGS -pg )
   ENDIF( UNIX AND ENABLE_CODE_PROFILING )
-#
-# Remove the comment in front of the following line if the unit test relies on
-# the unit testing framework "UnitTest++":
-#
-# TARGET_LINK_LIBRARIES( ${TEST_BIN} UnitTest++ )
-# TARGET_LINK_LIBRARIES( ${TEST_BIN} efwrap )
-# TARGET_LINK_LIBRARIES( ${TEST_BIN} efence )
 #
 # If information about test coverage is requested, the ENABLE_TEST_COVERAGE
 # variable must be defined. The coverage data is generated on Unix systems
