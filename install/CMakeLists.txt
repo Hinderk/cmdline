@@ -97,20 +97,3 @@ ELSE( UNIX )
 ENDIF( UNIX )
 
 INCLUDE( CPack )
-
-# Create a target to launch the packager & create an installer ...
-
-##
-##ADD_CUSTOM_TARGET( "mypackage"
-##  COMMENT "Create a custom installer for the library" )
-##
-##ADD_CUSTOM_COMMAND(
-##  TARGET "mypackage"
-##  POST_BUILD
-##  COMMENT "Create a custom installer for the library"
-##  COMMAND
-##    ${CMAKE_COMMAND} -E move
-##    ${CPACK_PACKAGE_FILE_NAME}
-##    "cmdline-$<CONFIG>-${CPACK_PACKAGE_VERSION}-${CPACK_SYSTEM_NAME}.exe"
-##  DEPENDS ${CPACK_PACKAGE_FILE_NAME}
-##)
