@@ -23,12 +23,12 @@ ENDIF()
 SET( SO_VERSION "1" )
 SET( MINOR_VERSION "0.0" )
 
-# Detect if the project is built by itself of as one part of some 
+# Detect if the project is built by itself of as one part of some
 # larger project. In the former case a number of options may be
 # used to modify the build procedure ...
 
-STRING( COMPARE EQUAL 
-  "${CMAKE_SOURCE_DIR}" 
+STRING( COMPARE EQUAL
+  "${CMAKE_SOURCE_DIR}"
   "${CMAKE_CURRENT_SOURCE_DIR}"
   PROVIDE_OPTIONS
 )
@@ -36,19 +36,42 @@ STRING( COMPARE EQUAL
 # Detect the presence of debug symbols in the compiler artifacts
 # as this may affect the packaging of the library ...
 
-##SET( CMDLINE_RELEASE_BUILD ON )
+SET( CMDLINE_RELEASE_BUILD ON )
+SET( CMDLINE_DEBUG_SYMBOLS OFF )
+
 IF( DEFINED CMAKE_BUILD_TYPE AND CMAKE_BUILD_TYPE )
   STRING( TOUPPER "${CMAKE_BUILD_TYPE}" NORMALISED_BUILD_TYPE )
-  IF( ${NORMALISED_BUILD_TYPE} MATCHES "DEBUG" OR
-      ${NORMALISED_BUILD_TYPE} MATCHES "RELWITHDEBINFO" )
-  ##  SET( CMDLINE_RELEASE_BUILD OFF )
-    OPTION( CMDLINE_SEPARATE_DEBUG_SYMBOLS
-            "Create a separate package with debug symbols."
-            OFF
-    )
-    IF( CMDLINE_SEPARATE_DEBUG_SYMBOLS )
-      SET( CMDLINE_DEBUG_SYMBOLS OFF )
-    ENDIF()
+  FOREACH( TYPE ${NORMALISED_BUILD_TYPE} )
+    IF ( ${TYPE} MATCHES "DEBUG" )
+	  SET( CMDLINE_RELEASE_BUILD OFF )
+	  SET( CMDLINE_DEBUG_SYMBOLS ON )
+	ELSEIF( ${TYPE} MATCHES "RELWITHDEBINFO" )
+      SET( CMDLINE_RELEASE_BUILD OFF )
+	  SET( CMDLINE_DEBUG_SYMBOLS ON )
+	ENDIF()
+  ENDFOREACH()
+ENDIF()
+
+IF( DEFINED CMAKE_CONFIGURATION_TYPES AND CMAKE_CONFIGURATION_TYPES )
+  STRING( TOUPPER "${CMAKE_CONFIGURATION_TYPES}" NORMALISED_CTYPES )
+  FOREACH( TYPE ${NORMALISED_CTYPES} )
+    IF( ${TYPE} MATCHES "DEBUG" )
+      SET( CMDLINE_RELEASE_BUILD OFF )
+	  SET( CMDLINE_DEBUG_SYMBOLS ON )
+	ELSEIF( ${TYPE} MATCHES "RELWITHDEBINFO" )
+      SET( CMDLINE_RELEASE_BUILD OFF )
+	  SET( CMDLINE_DEBUG_SYMBOLS ON )
+	ENDIF()
+  ENDFOREACH()
+ENDIF()
+
+IF( CMDLINE_DEBUG_SYMBOLS )
+  OPTION( CMDLINE_SEPARATE_DEBUG_SYMBOLS
+          "Create a separate package with debug symbols."
+          OFF
+  )
+  IF( CMDLINE_SEPARATE_DEBUG_SYMBOLS )
+    SET( CMDLINE_DEBUG_SYMBOLS OFF )
   ENDIF()
 ENDIF()
 
@@ -59,7 +82,7 @@ IF ( PROVIDE_OPTIONS )
   OPTION(
     CMDLINE_BUILD_SHARED_LIB
     "Create a shared library (dll)."
-    YES 
+    YES
   )
 ENDIF( PROVIDE_OPTIONS )
 
@@ -68,6 +91,13 @@ ENDIF( PROVIDE_OPTIONS )
 
 IF( DEFINED CMDLINE_BUILD_SHARED_LIB )
   SET( BUILD_SHARED_LIBS "${CMDLINE_BUILD_SHARED_LIB}" )
+  SET( CMDLINE_MONOLITHIC_BUILD OFF )
+ELSE()
+  OPTION(
+    CMDLINE_MONOLITHIC_BUILD
+    "Create a monolithic build."
+    NO
+  )
 ENDIF()
 
 # The following switch turns the automated unit tests on or off. To
@@ -80,13 +110,13 @@ ENABLE_TESTING()
 ADD_SUBDIRECTORY( "src" )
 ADD_SUBDIRECTORY( "tests" )
 
-# Provide an installer unless the project is built as some part of a 
+# Provide an installer unless the project is built as some part of a
 # larger project which has installation procedures of its own to deal
 # with this library - should that prove necessary at all.
 
-OPTION( 
-  CMDLINE_INCLUDE_PACKAGING 
-  "Provide an installer for the library" 
+OPTION(
+  CMDLINE_INCLUDE_PACKAGING
+  "Provide an installer for the library"
   "${PROVIDE_OPTIONS}"
 )
 

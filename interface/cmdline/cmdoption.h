@@ -62,7 +62,7 @@ namespace __CMD {
     virtual void Discard( void ) = 0 ;
     virtual DataHandle *Copy( void ) const = 0 ;
     virtual int Type( void ) const = 0 ;
-    virtual std::string GetString( void ) const = 0 ;
+    virtual const char* GetString( void ) = 0 ;
 
   } ;
 
@@ -70,9 +70,13 @@ namespace __CMD {
   template < typename T >
   struct DataItem : public DataHandle {
 
-    DataItem( const T &val ) : Item( val ) {}
+    DataItem( const T &val ) : Item( val ), String( NULL ) {}
 
-    void Discard( void )  { delete this ; }
+    void Discard( void )
+    {
+      if ( String )  free( String ) ;
+      delete this ;
+    }
 
     DataHandle* Copy( void ) const
     {
@@ -84,16 +88,20 @@ namespace __CMD {
       return __CMD::TypeIndex<T>::value ;
     }
 
-    std::string GetString( void ) const
+    const char* GetString( void )
     {
+      if ( String )  return String ;
       std::stringstream out ;
       out << Item ;
-      return out.str() ;
+      String = strdup( out.str().c_str() ) ;
+      return String ;
     }
 
     const T Item ;
 
-  } ; 
+    char *String ;
+
+  } ;
 
 
   template<>
@@ -105,8 +113,8 @@ namespace __CMD {
     }
 
     void Discard( void )
-    { 
-      if ( Item )  free( (void*) Item ) ;
+    {
+      if ( Item )  free( Item ) ;
       delete this ;
     }
 
@@ -117,12 +125,12 @@ namespace __CMD {
 
     int Type( void ) const { return CMD_STRING_T ; }
 
-    std::string GetString( void ) const
+    const char* GetString( void )
     {
-      return std::string( Item ) ;
+      return Item ? Item : "" ;
     }
 
-    const char *Item ;
+    char *Item ;
 
   } ;
 
@@ -142,7 +150,7 @@ class CmdOption {
       return Handle ? Handle -> Type() : CMD_UNDEFINED_T ;
     }
 
-    std::string GetString( void ) const
+    const char* GetString( void ) const
     {
       return Handle ? Handle -> GetString() : "" ;
     }

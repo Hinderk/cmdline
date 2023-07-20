@@ -22,27 +22,31 @@ SET_TARGET_PROPERTIES( ${LIBNAME} PROPERTIES RELWITHDEBINFO_POSTFIX "d" )
 
 INCLUDE( GenerateExportHeader )
 
-GENERATE_EXPORT_HEADER( 
-  ${LIBNAME} 
+GENERATE_EXPORT_HEADER(
+  ${LIBNAME}
   EXPORT_FILE_NAME "include/cmdline/cmdexport.h"
 )
 
-# The following compiler switches are used to configure the build 
+# The following compiler switches are used to configure the build
 # process on all Unix systems which use GNU development tools.
 
 # ...
 
-# The following settings are used to build the library with some
-# native C++ compiler on a Windows box (e.g. VS2019):
+# The following settings are used to build a static library with
+# some native C++ compiler on a Windows box (e.g. VS2019):
 
-# ...
+IF( WIN32 AND CMDLINE_MONOLITHIC_BUILD )
+  TARGET_COMPILE_OPTIONS( ${LIBNAME} PRIVATE /MT )
+  TARGET_LINK_OPTIONS( ${LIBNAME} PRIVATE /INCREMENTAL:NO )
+  TARGET_LINK_OPTIONS( ${LIBNAME} PRIVATE /NODEFAULTLIB:MSVCRT )
+ENDIF( WIN32 AND CMDLINE_MONOLITHIC_BUILD )
 
 # The following settings apply to both Windows and Posix builds ...
 
 TARGET_COMPILE_FEATURES( ${LIBNAME} PUBLIC cxx_std_11 )
 
 
-TARGET_INCLUDE_DIRECTORIES( 
+TARGET_INCLUDE_DIRECTORIES(
   ${LIBNAME}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../interface>
@@ -54,6 +58,6 @@ TARGET_INCLUDE_DIRECTORIES(
 
 TARGET_COMPILE_DEFINITIONS(
   ${LIBNAME}
-  PUBLIC 
+  PUBLIC
     $<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:${LIBNAME}_STATIC_DEFINE>
 )

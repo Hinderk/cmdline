@@ -144,7 +144,7 @@ int CmdLine::AddName( OptionIndex Option, const char *Name )
   {
     if ( Data.count( Option ) > 0 )
     {
-      if ( Name )  
+      if ( Name )
         Data[ Option ].Name = Name ;
       else
       {
@@ -604,12 +604,12 @@ int CmdLine::CloseBracket( char &c, const char *Expression ) const
   int sp = 0 ;
   for ( int i = 0 ; i < len ; i++ )
   {
-    if ( Expression[i] == '(' )  Stack[ sp ++ ] = ')' ; 
-    if ( Expression[i] == '[' )  Stack[ sp ++ ] = ']' ; 
-    if ( Expression[i] == '<' )  Stack[ sp ++ ] = '>' ; 
-    if ( Expression[i] == ')' && Stack[ -- sp ] != ')' )  return 0 ; 
-    if ( Expression[i] == ']' && Stack[ -- sp ] != ']' )  return 0 ; 
-    if ( Expression[i] == '>' && Stack[ -- sp ] != '>' )  return 0 ; 
+    if ( Expression[i] == '(' )  Stack[ sp ++ ] = ')' ;
+    if ( Expression[i] == '[' )  Stack[ sp ++ ] = ']' ;
+    if ( Expression[i] == '<' )  Stack[ sp ++ ] = '>' ;
+    if ( Expression[i] == ')' && Stack[ -- sp ] != ')' )  return 0 ;
+    if ( Expression[i] == ']' && Stack[ -- sp ] != ']' )  return 0 ;
+    if ( Expression[i] == '>' && Stack[ -- sp ] != '>' )  return 0 ;
     if ( sp > 8 )  return 0 ;
   }
   c = sp ? Stack[ sp - 1 ] : ' ' ;
@@ -624,8 +624,7 @@ int CmdLine::Prettify( char *Out, char *In, size_t Length ) const
   if ( 1 + Size < Length )
   {
     int MaxColumn = 0 ;
-    int state = QueryWidth( MaxColumn ) ;
-    if ( state )  return state ; 
+    if ( QueryWidth( MaxColumn ) )  MaxColumn = 80 ;
     memcpy( Out, In, Length ) ;
     char c, *Cursor = strtok( Out, "[(<" ) ;
     int LeftColumn = strlen( Out ) ;
@@ -635,7 +634,7 @@ int CmdLine::Prettify( char *Out, char *In, size_t Length ) const
     int option = 0 ;
     Cursor = strtok( In + pos, ")>]" ) ;
     char *Start = Out + pos ;
-    while( Cursor ) 
+    while( Cursor )
     {
       int delta = strlen( Cursor ) ;
       if ( Cursor[ 0 ] == ' ' )
@@ -644,7 +643,7 @@ int CmdLine::Prettify( char *Out, char *In, size_t Length ) const
         {
           Out[ pos ++ ] = c ;
           column ++ ;
-        } 
+        }
         if ( column + 1 > MaxColumn && option > 0 )
         {
           const size_t len = strlen( Start ) ;
@@ -655,7 +654,7 @@ int CmdLine::Prettify( char *Out, char *In, size_t Length ) const
           Start[ 0 ] = '\n' ;
           pos += LeftColumn ;
           column = LeftColumn + len ;
-        } 
+        }
         Start = Out + pos ;
         option ++ ;
       }

@@ -7,10 +7,10 @@ INCLUDE( CMakePackageConfigHelpers )
 # allow for user input.
 
 IF ( NOT DEFINED CMDLINE_INSTALL_CMAKEDIR )
-  SET( 
+  SET(
     CMDLINE_INSTALL_CMAKEDIR
     "${CMAKE_INSTALL_LIBDIR}/cmake/${LIBNAME}"
-    CACHE STRING 
+    CACHE STRING
     "Path to the ${LIBNAME} CMake files"
 )
 ENDIF()
@@ -23,8 +23,8 @@ INSTALL( TARGETS ${LIBNAME}
          ARCHIVE  COMPONENT ${LIBNAME}_Development
          INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" )
 
-INSTALL( 
-  DIRECTORY 
+INSTALL(
+  DIRECTORY
     "${CMAKE_SOURCE_DIR}/interface/"
     "${CMAKE_BINARY_DIR}/src/include/"
   TYPE INCLUDE
@@ -45,7 +45,7 @@ INSTALL(
   COMPONENT ${LIBNAME}_Development
 )
 
-# Create a file containing version information ... 
+# Create a file containing version information ...
 
 WRITE_BASIC_PACKAGE_VERSION_FILE(
   "${LIBNAME}ConfigVersion.cmake"
@@ -79,12 +79,38 @@ ADD_CUSTOM_COMMAND(
 
 # Proceed to configure the generator 'CPack' for a binary installer ...
 
-INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.cmake" ) 
+INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.cmake" )
 
 IF( UNIX )
-  INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.deb.cmake" ) 
+  INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.deb.cmake" )
 ELSE( UNIX )
-  INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.wix.cmake" ) 
+  OPTION(
+    CMDLINE_NSIS_PACKAGER
+    "Use NSIS to create an installer."
+    YES
+  )
+  IF( CMDLINE_NSIS_PACKAGER )
+    INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.nsis.cmake" )
+  ELSE(  CMDLINE_NSIS_PACKAGER )
+    INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.wix.cmake" )
+  ENDIF( CMDLINE_NSIS_PACKAGER )
 ENDIF( UNIX )
 
 INCLUDE( CPack )
+
+# Create a target to launch the packager & create an installer ...
+
+##
+##ADD_CUSTOM_TARGET( "mypackage"
+##  COMMENT "Create a custom installer for the library" )
+##
+##ADD_CUSTOM_COMMAND(
+##  TARGET "mypackage"
+##  POST_BUILD
+##  COMMENT "Create a custom installer for the library"
+##  COMMAND
+##    ${CMAKE_COMMAND} -E move
+##    ${CPACK_PACKAGE_FILE_NAME}
+##    "cmdline-$<CONFIG>-${CPACK_PACKAGE_VERSION}-${CPACK_SYSTEM_NAME}.exe"
+##  DEPENDS ${CPACK_PACKAGE_FILE_NAME}
+##)
