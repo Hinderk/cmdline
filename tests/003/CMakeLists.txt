@@ -7,14 +7,6 @@
 #
 ###############################################################################
 #
-# The directories below contain additional header files which be necessary
-# to build the unit test. However, relying on other projects is discouraged,
-# as each unit test should be as self-contained as possible.
-#
-##  INCLUDE_DIRECTORIES( $ENV{HOME}/include  )
-#
-###############################################################################
-#
 # The following code is completely generic and may be recycled for all unit
 # test in the project. The test setup is performed in the module "TestSetup"
 # which is supposed to reside in the current directory. The CMake module will
@@ -44,7 +36,6 @@
 # generic name for the test is derived from the current source path and the
 # test is registered under this designation with the CTest system...
 #
-    MESSAGE(  "---> No setup script found ..." )
     IF( DEFINED SOURCES )
       SET( TEST_BIN "driver-003" )
       ADD_EXECUTABLE( ${TEST_BIN} ${SOURCES} )

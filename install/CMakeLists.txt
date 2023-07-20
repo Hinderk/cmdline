@@ -84,7 +84,16 @@ INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.cmake" )
 IF( UNIX )
   INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.deb.cmake" )
 ELSE( UNIX )
-  INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.wix.cmake" )
+  OPTION(
+    CMDLINE_NSIS_PACKAGER
+    "Use NSIS to create an installer."
+    YES
+  )
+  IF( CMDLINE_NSIS_PACKAGER )
+    INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.nsis.cmake" )
+  ELSE(  CMDLINE_NSIS_PACKAGER )
+    INCLUDE( "${CMAKE_CURRENT_SOURCE_DIR}/cpack.wix.cmake" )
+  ENDIF( CMDLINE_NSIS_PACKAGER )
 ENDIF( UNIX )
 
 INCLUDE( CPack )

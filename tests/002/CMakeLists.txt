@@ -36,7 +36,6 @@
 # generic name for the test is derived from the current source path and the
 # test is registered under this designation with the CTest system...
 #
-    MESSAGE(  "---> No setup script found ..." )
     IF( DEFINED SOURCES )
       SET( TEST_BIN "driver-002" )
       ADD_EXECUTABLE( ${TEST_BIN} ${SOURCES} )
