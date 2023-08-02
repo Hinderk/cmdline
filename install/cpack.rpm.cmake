@@ -1,0 +1,57 @@
+
+# Configuration to create a "CmdLine" Debian package ...
+
+SET( CPACK_GENERATOR "RPM" )
+SET( CPACK_RPM_COMPONENT_INSTALL ON )
+
+STRING( TOUPPER "${LIBNAME}_Development" DEVCOMP )
+STRING( TOUPPER "${LIBNAME}_Runtime" RTCOMP )
+
+SET( CPACK_RPM_${RTCOMP}_PACKAGE_NAME "cmdline" )
+SET( CPACK_RPM_${RTCOMP}_FILE_NAME RPM-DEFAULT )
+SET( CPACK_RPM_${DEVCOMP}_PACKAGE_NAME "cmdline-dev" )
+SET( CPACK_RPM_${DEVCOMP}_FILE_NAME RPM-DEFAULT )
+
+## SET( CPACK_RPM_PACKAGE_EPOCH 1 )
+
+OPTION( CPACK_RPM_PACKAGE_DEBUG
+        "Trace activities of the package generator."
+        OFF
+)
+OPTION( CPACK_RPM_PACKAGE_GENERATE_SHLIBS
+        "Generate shlibs control file automatically."
+        ON
+)
+
+SET( CPACK_PACKAGE_DESCRIPTION_SUMMARY
+     "A simple, portable command line parser written in C++11." )
+
+##SET( CPACK_RPM_PACKAGE_NAME "cmdline" )
+SET( CPACK_DEBIAN_PACKAGE_PRIORITY "extra" )
+
+SET( CPACK_PACKAGE_VENDOR "Hinderk Buss" )
+SET( CPACK_PACKAGE_CONTACT "Hinderk Buss" )
+SET( CPACK_RPM_PACKAGE_MAINTAINER "Hinderk Buss" )
+SET( CPACK_RPM_PACKAGE_HOMEPAGE "https://github.com/Hinderk/cmdline" )
+
+SET( CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/INFO.md" )
+SET( CPACK_PACKAGE_LICENSE_FILE "${CMAKE_SOURCE_DIR}/LICENSE" )
+
+
+SET( CPACK_RPM_PACKAGE_DEPENDS "libc6, libstdc++6" )
+
+IF( CMDLINE_SEPARATE_DEBUG_SYMBOLS )
+  SET( CPACK_RPM_${RTCOMP}_DEBUGINFO_PACKAGE YES )
+ENDIF()
+
+
+##############################################################################
+
+## CPACK_RPM_PACKAGE_SUMMARY
+## CPACK_RPM_<component>_PACKAGE_SUMMARY
+## CPACK_RPM_PACKAGE_NAME
+## CPACK_RPM_<component>_PACKAGE_NAME
+## CPACK_RPM_FILE_NAME
+## CPACK_RPM_<component>_FILE_NAME
+## CPACK_RPM_MAIN_COMPONENT
+## CPACK_RPM_PACKAGE_VERSION
